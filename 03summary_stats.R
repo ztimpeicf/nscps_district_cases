@@ -6,35 +6,39 @@
 # 
 # Independent variables:
 # School level:
-# percent free and reduced lunch eligible from 2020 NCES
-# percent black, white, hispanic, asian, hawaiian, other
+# percent free and reduced lunch eligible from 2020 NCES*
+# percent black, white, hispanic, asian, hawaiian, other*
 # 
 # County
-# SVI
+# SVI*
 # case count (NEED)
 # 
-# locale, region
+# locale, region*
 # 
 # POLICY VARIABLES
-# Vaccination max: 21
-# Etiquette max: 8
-# Masks max: 15
-# Physical distancing max: 6
-# Cohorting or staggering max: 3
-# Testing and Screening max: 8
-# Stay Home max: 10
-# Trace and Quarantine max: 10
-# Cleaning max: 6
-# Ventilation max: 16
+# Vaccination max: 21*
+# Etiquette max: 8*
+# Masks max: 15*
+# Physical distancing max: 6*
+# Cohorting or staggering max: 3*
+# Testing and Screening max: 8*
+# Stay Home max: 10*
+# Trace and Quarantine max: 10*
+# Cleaning max: 6*
+# Ventilation max: 16*
 # 
 library(dplyr)
 library(tidyr)
 library(purrr)
 library(broom)
-df <- readRDS("analytic_data.rds")
+library(stringr)
+full_df <- readRDS("analytic_data.rds")
+
+df <- full_df %>%
+  filter(!is.na(changeinrate))
 
 predictors <- df %>%
-  select(vaccination:ventilation,starts_with(c("percent","rpl")),ends_with("75")) %>%
+  select(vaccination:ventilation,starts_with(c("percent","rpl")),ends_with(c("50","75","quarter"))) %>%
   names()
 
 list_sum_stats <- list(n=~sum(!is.na(.)),
@@ -48,25 +52,78 @@ list_sum_stats <- list(n=~sum(!is.na(.)),
                   prob = ~c(0.25,.75))
 
 summary_statistics <- df %>% 
+  filter(!is.na(changeinrate))%>%
   summarise(across(all_of(c("changeinrate",predictors)),list_sum_stats))%>%
   pivot_longer(cols=everything(),names_to=c("construct",".value"),names_sep="_")%>%
   pivot_wider(names_from = prob,values_from=tiles)
 
 dichotomous_vars <- summary_statistics %>%
+  filter(!min==max)%>%
   select(construct)%>%
-  filter(str_detect(construct,"75$"))%>%
-  pull()
+  filter(str_detect(construct,"50$|75$"))%>%
+  pull()%>%
+  rlang::set_names()
 
 # t-test looking at differences between change in case rates by dichotomous vars
-ttest_results<-map_dfr(dichotomous_vars[-5], ~
-              glue::glue("changeinrate ~ {.x}")%>%
+ttest_results<- map_dfr(dichotomous_vars, ~
+                glue::glue("changeinrate ~ {.x}")%>%
                 as.formula()%>%
                 t.test(data=df,na.action = na.omit) %>%
                 tidy()%>%
-                mutate(predictor = .x,
+                mutate(construct = .x,
                        across(where(is.numeric),~round(.,3)))%>%
-                relocate(predictor, .before=1)
-              # %>%
-              #   rename(group0 = estimate1, group1=estimate2)
+                relocate(construct, .before=1)              %>%
+                rename(`No policy_mean` = estimate1, `Has policy_mean`=estimate2)
 )
-                         
+n_fn <- function(x){
+  x_sym <- sym(x)
+
+  df %>%
+    group_by({{x_sym}})%>%
+    select({{x_sym}})%>%
+    count()%>%
+    rename(category=c(1)) %>%
+    mutate(category = ifelse(category==0,"No policy_n","Has policy_n"))
+}
+dichotomous_ns <- map_dfr(dichotomous_vars,n_fn,.id="construct")%>%
+  pivot_wider(id_cols=construct,names_from=category,values_from=n)
+
+dichotomous_stats <- inner_join(dichotomous_ns,ttest_results)
+
+# ANOVA looking at region and locale
+categorical_vars <- c("region","locale")
+
+anovas <- map_dfr(categorical_vars, ~
+  glue::glue("changeinrate ~ {.x}")%>%
+    as.formula()%>%
+    aov(data=df)%>%
+    tidy()%>%
+    filter(term == .x)
+)
+
+# Pearson correlations for the continuous variables
+continuous_vars <-summary_statistics %>%
+  select(construct)%>%
+  filter(!str_detect(construct,"50$|75$|changeinrate"))%>%
+  pull()
+
+scaled_df <- df %>%
+  select(changeinrate,all_of(continuous_vars))%>%
+  mutate(across(!changeinrate,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T)))
+
+continuous_correlations <- map_dfr(continuous_vars, ~
+            glue::glue("~ changeinrate + {.x}")%>%
+            as.formula()%>%
+            cor.test(data=scaled_df,method="pearson") %>%
+            tidy() %>%
+              mutate(predictor = .x,
+                     across(where(is.numeric),~round(.,3)))%>%
+              relocate(predictor, .before=1)
+  )
+
+# write results to excel file
+summary_list <- list(summary_statistics=summary_statistics,dichotomous_stats=dichotomous_stats,
+                     anovas=anovas,continuous_correlations=continuous_correlations)
+
+saveRDS(summary_list,"raw_summary_statistics.rds")
+writexl::write_xlsx(summary_list,path="raw_summary_statistics.xlsx")

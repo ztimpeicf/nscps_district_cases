@@ -1,0 +1,198 @@
+---
+title: "Analysis #2: District policy and health department-reported case data"
+format: 
+  html:
+    page-layout: full
+    self-contained: true  
+    theme: journal
+editor: visual
+---
+
+```{r}
+#| echo: false
+#| include: false
+library(DT)
+library(dplyr)
+library(tidyr)
+readRDS("raw_summary_statistics.rds")%>%
+  list2env(envir=.GlobalEnv)
+
+readRDS("output_tables.rds")%>%
+  list2env(envir=.GlobalEnv)
+```
+
+# Introduction
+
+The purpose of this analysis is to study the effectiveness of school districts' COVID-19 prevention strategies in mitigating the spread of COVID-19 among school-aged children and adolescents. Specifically, we collected COVID-19 policies from a nationally-representative random sample of 1,202 school districts, as well as COVID-19 case counts from state health departments, for the period comprising the 2021-2022 school year. As such, the primary research question is, what is the association between districts' COVID-19 prevention policies and subsequent COVID-19 caseloads in schools?
+
+# Methods
+
+*Outcome of interest*: Change in schools' fall and spring monthly average case counts, operationalized as the difference between the average of schools' monthly number of cases across October, November, and December 2021 and average number of monthly cases for January, February, and March 2022.
+
+*Independent variables:* The key predictors of interest consist of 10 categories of COVID-19 mitigation strategies, including:
+
+-   Vaccination
+-   Etiquette
+-   Masking
+-   Physical distancing
+-   Cohorting/Staggering
+-   Testing and screening
+-   Staying home
+-   Trace and quarantine
+-   Cleaning
+-   Ventilation
+
+*School-level characteristics*
+
+-   Percent student body eligible for free and reduced lunch
+-   School locale
+-   Percent of student body Asian, American Indian or Alaska Native, Black/African American, Hispanic/Latino, Native Hawaiian or other Pacific Islander, Not specific, Two or more races, and White (each race/ethnicity represented dichotomously)
+
+*County-level characteristics*
+
+-   Social Vulnerability Index (SVI):
+-   COVID-19 case rates (monthly average in accordance with school averages)
+-   Region
+-   State
+
+# Results
+
+As we explore the data there are a number of different ways to capture district policy strategies, one prominent characteristic being *when* policies were enacted. For the current study, we distinguish between policies enacted during the fall and spring semesters. Policies enacted during the spring semester are classified as not having a policy in place. After classifying policies enacted during the spring as not having one in place, the strategies can be assessed as continuous or categorical (i.e., dichotomous) indicators. As part of this initial summary, we present summary statistics for viewing strategy enactment through both lenses. Additionally, Pearson's correlation coefficient is calculated as an initial measure of association between continuous variables and the change in case rates between spring and fall (see tables 1 and 2). For dichotomous indicators, t-tests are conducted, comparing the average change in case rates between schools with and without the strategies in place (table 3). These initial results are presented as follows, with the idea being that the team will determine which method of characterizing district policies (i.e., whether to dichotimize) and that the machine learning approach will aid in determining the most prominent policies to test against, if necessary.
+
+Initial results are summarized as follows. First, table 1 includes summary statistics of the outcome of interest (change in case rate) as well as covariates. Table 2 provides the summary statistics, including Pearson's correlation coefficients, for strategies operationalized as a continuous variable (0 meaning no strategy in place; max indicating the max score possible for a given strategy). Table 3 reviews summary statistics and t-test results from strategies dichotomized as 0 if scoring below 75th percentile or enacted or enacted during spring, and 1 if scoring in 75th percentile or greater.
+
+```{r}
+#| echo: false
+tbl1 %>%
+   DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (median)"="mean_median"),
+                 style="bootstrap4",
+                 caption = "Table 1: Summary statistics of changes in case rates and covariates",
+                extensions = 'Buttons', options = list(
+                  pageLength=nrow(tbl2),
+    dom = 'tBr',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+Table 2 provides summary statistics and Pearson's correlation coefficients for the 10 strategy indicators as continuous variables, as well as covariates.
+
+```{r}
+#| echo: false
+tbl2 %>%
+   DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (median)"="mean_median", "Correlation (p-value)"="est_pval"),
+                 style="bootstrap4",
+                 caption = "Table 2: Summary statistics of strategies and correlations with changes in case rates",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl2),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+```{r}
+#| echo: false
+tbl3 %>%
+   DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (median)"="mean_median", "Difference in means (p-value)"="t_estimate", 'No policy'='No policy_mean','Has policy'='Has policy_mean'),
+                 style="bootstrap4",
+                 caption = "Table 3: Summary statistics of dichotomized policies scoring at 75th percentile and t-test results comparing changes in case rates between groups",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl2),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+# Discussion
+
+Table 2 tabulates schools over October 2021 - March 2022, a time frame more closely aligned with waves two-four of the NSCPS.
+
+```{r}
+#| eval: false
+#| echo: false
+state_stats %>%
+   DT::datatable(rownames = FALSE,colnames=c("Report type"='type'),
+ style="bootstrap4",
+ caption = "Table 2: Number of schools with case count availability by number of months corresponding to waves 2-4 (max 6)",
+  extensions = 'Buttons', options = list(
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+## NSCPS
+
+The school-reported case count data is drawn from waves two, three, and four of the NSCPS. Table 3 provides the total number of schools that reported case counts through the NSCPS by wave.
+
+```{r}
+#| eval: false
+#| echo: false
+nscps_case_stats %>%
+  select(type,starts_with("cases"))%>%
+  DT::datatable(rownames = FALSE,colnames=c("Report type"="type","Wave 2"="cases_wave2","Wave 3"="cases_wave3","Wave 4"="cases_wave4","Waves 2 and 3"="cases_wave2n3","Waves 2-4"='cases_waveall'),
+                style="bootstrap4",
+                 caption = "Table 3: Availability of case count data from NSCPS",
+                extensions = 'Buttons', options = list(
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+## NSCPS and State data
+
+A logical version of state- and school-reported case data have been combined to determine how many schools have data from both sources.
+
+Table 4 provides a tabulation of the intersection between state- and survey-reported data. Num_months is the number of months covered by states' reports for a given school*,* and total_schools is the total number of schools reported by state for the given number of months. Think of this as the maximum number of schools that could have representation from both data sources if all schools participated in the NSCPS. The wave columns correspond with the number of schools that reported student cases through the respective wave of the NSCPS.
+
+Example: Among states that tried to provide data, there are 309 schools missing all data (hence num_months==0). Of these schools, there are 75 schools that report case counts through Wave 2 of the NSCPS, 56 through Wave 3, and 48 reporting in both waves.
+
+```{r}
+#| eval: false
+#| echo: false
+summarise_combined %>%
+  select(type,total_schools,num_months,starts_with("cases"))%>%
+  filter(type=="student")%>%
+  mutate(across(c(total_schools,num_months),~ifelse(is.na(.),"No report",.)))%>%
+  select(-type)%>%
+  DT::datatable(rownames = FALSE,
+                style="bootstrap4",
+                 caption = "Number of schools with student case count data from both sources",
+                extensions = 'Buttons', options = list(
+    dom = 'tB',
+    buttons = c('excel', 'copy')))
+```
+
+#### Schools with data from states OR the NSCPS
+
+Finally, table 5 provides a tabulation of schools with state or NSCPS data. That is, if we were able to replace NSCPS case report missingness with state-reported case counts (those that provide all 6 months of data), what would our sample size be?
+
+```{r}
+#| eval: false
+#| echo: false
+or_summary %>%
+  #filter(type=="student")%>%
+  DT::datatable(rownames = FALSE,
+                colnames=c("Report type"="type","Wave 2"="or_cases_wave2","Wave 3"="or_cases_wave3","Wave 4"="or_cases_wave4","Waves 2 and 3"="or_cases_wave2n3","Waves 2-4"='or_cases_waveall'),
+                style="bootstrap4",
+                 
+                 caption = "Table 5: Total number of schools with case count data from NSCPS or all six months reported by state",
+                extensions = 'Buttons', options = list(
+    dom = 'tB',
+    buttons = c('excel', 'copy')))
+```
+
+```{r}
+#| eval: false
+#| echo: false
+participation_summar %>%
+  #filter(type=="student")%>%
+  DT::datatable(rownames = FALSE,
+                colnames=c("Report type"="type","Wave 2"="state_participated_wave2","Wave 3"="state_participated_wave3","Wave 4"="state_participated_wave4","Wave 5"="state_participated_wave5","Waves 2 and 3"="state_participated_wave2n3","Waves 2-4"='state_participated_wave2thru4',"Waves 2-5"="state_participated_waveall"),
+                style="bootstrap4",
+                 #options = list(pageLength=25,dom='t'),
+                 caption = "Table 6: Total number of schools participating in the NSCPS and have state-reported full case",
+                extensions = 'Buttons', options = list(
+                  pageLength=20,
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+  )
+```
