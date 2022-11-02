@@ -73,7 +73,7 @@ ml <- readRDS("raw_data/sampling_masterlist.rds")%>%
 # SVI information
 svi <- readRDS("raw_data/svi.rds")%>%
   clean_names()%>%
-  select(qid,school_level,rpl_theme1:last_col())
+  select(qid,school_level,rpl_themes)
 
 
 

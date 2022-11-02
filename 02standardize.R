@@ -17,20 +17,20 @@ strategies <- c("vaccination","etiquette","masks","physicaldistancing",
 # for each strategy indicating if strategy scores in 75th percentile or greater
 final <- analytic %>%
   filter(month %in% c("October","January"))%>%
-  select(-c(hd,student,date,policymonth),-c(americanindianoralaskanative:white),
-         -starts_with("spl"))%>%
+  select(-c(hd,student,date,policymonth),-c(americanindianoralaskanative:white))%>%
   group_by(qid,schoollevel)%>%
   mutate(caserate = rollingmean/enrollment*100)%>%
   select(qid,schoollevel,district,month,quarterenacted,enrollment,caserate,everything(),-rollingmean)%>%
   group_by(qid,schoollevel)%>%
   pivot_wider(names_from=month,values_from=caserate)%>%
   ungroup()%>%
-  mutate(across(starts_with("rpl"),~100*.),
+  mutate(rplthemes = rplthemes*100,
          changeinrate = January - October,
          across(all_of(strategies),~case_when(quarterenacted %in% c("First","Second")~.,
                                               TRUE ~ 0),.names = "{.col}quarter"), # If policy enacted during 1st or 2nd quarter of school year, score 1. otherwise 0.
          across(all_of(strategies),~ifelse(. >= quantile(.,c(.5)),1,0),.names = "{.col}.50"), # If school at 50th percentile 1, otherwise 0.
-         across(c(all_of(strategies),ends_with("quarter")),~ifelse(. >= quantile(.,c(.75)),1,0),.names = "{.col}.75") # if school at 75th percentile 1, otherwise 0.
+         across(c(all_of(strategies),ends_with("quarter")),~ifelse(. >= quantile(.,c(.75)),1,0),.names = "{.col}.75"),
+         across(ends_with("quarter"),~ifelse(. > 0,1,0),.names = "{.col}.nonzero")
          )%>%
   relocate(changeinrate,.before=vaccination)
 

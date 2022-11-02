@@ -38,7 +38,7 @@ df <- full_df %>%
   filter(!is.na(changeinrate))
 
 predictors <- df %>%
-  select(vaccination:ventilation,starts_with(c("percent","rpl")),ends_with(c("50","75","quarter"))) %>%
+  select(vaccination:ventilation,starts_with(c("percent","rpl")),ends_with(c("50","75","quarter","nonzero"))) %>%
   names()
 
 list_sum_stats <- list(n=~sum(!is.na(.)),
@@ -60,7 +60,7 @@ summary_statistics <- df %>%
 dichotomous_vars <- summary_statistics %>%
   filter(!min==max)%>%
   select(construct)%>%
-  filter(str_detect(construct,"50$|75$"))%>%
+  filter(str_detect(construct,"50$|75$|nonzero$"))%>%
   pull()%>%
   rlang::set_names()
 
