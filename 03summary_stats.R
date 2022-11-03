@@ -38,7 +38,7 @@ df <- full_df %>%
   filter(!is.na(changeinrate))
 
 predictors <- df %>%
-  select(vaccination:ventilation,starts_with(c("percent","rpl")),ends_with(c("50","75","quarter","nonzero"))) %>%
+  select(vaccination:ventilation,starts_with(c("cnty","percent","rpl")),ends_with(c("50","75","quarter","nonzero","cntycases"))) %>%
   names()
 
 list_sum_stats <- list(n=~sum(!is.na(.)),

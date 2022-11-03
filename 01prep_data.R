@@ -10,6 +10,7 @@ library(janitor)
 library(zoo)
 library(readxl)
 library(stringr)
+library(clock)
 # Will need data from three main sources: state-reported case count (cases.rds),
 # district policy data (district_policy_dataset.xlsx),
 # and community factors (community prevalence, SVI, etc.)
@@ -67,7 +68,7 @@ nces <- readRDS("raw_data/nces_stats.rds")%>%
 
 # School information from the masterlist
 ml <- readRDS("raw_data/sampling_masterlist.rds")%>%
-  select(ncessch,qid,school_level,enrollment,state,county,region,locale)%>%
+  select(ncessch,qid,school_level,enrollment,state,fips,region,locale)%>%
   inner_join(nces,by="ncessch",na_matches="never")
 
 # SVI information
@@ -75,10 +76,35 @@ svi <- readRDS("raw_data/svi.rds")%>%
   clean_names()%>%
   select(qid,school_level,rpl_themes)
 
+# HHS Protect county cases and deaths
+covid <- readRDS("raw_data/cases_deaths.rds")%>%
+  purrr::pluck("df")%>%
+  select(cnty_fips,x2021_10_15_new_cases_7_day_rolling_average:x2022_03_15_new_cases_7_day_rolling_average)%>%
+  select(cnty_fips,contains("cases"))%>%
+  rename_with(.fn = ~gsub("_new_cases_7_day_rolling_average","",.),starts_with("x"))%>%
+  pivot_longer(starts_with("x"))%>%
+  group_by(cnty_fips)%>%
+  mutate(name = str_extract_all(name,"[:digit:].*")%>%unlist(),
+         name = date_parse(name,format="%Y_%m_%d")%>%as_year_month_day(),
+         cnty_cases = zoo::rollapply(value,width=3,
+                                       FUN=function(x)mean(x,na.rm=T),
+                                       partial = TRUE,align="left")
+         )%>%
+  select(-value)%>%
+  filter(get_month(name) %in% c(1,10))%>%
+  inner_join(ml[,c("fips","qid","school_level")],by=c("cnty_fips"="fips"))%>%
+  pivot_wider(id_cols=c(cnty_fips,qid,school_level),values_from=cnty_cases,names_from=name)%>%
+  rename(october=c(4),january=c(5))%>%
+  mutate(cntycaseschange = january - october)%>%
+  ungroup()%>%
+  select(qid,school_level,cntycaseschange)%>%
+  unique()
+  
+
+  
 
 
-
-final <- list(cases=full_cases,district_policies=policy,ml=ml,svi=svi)
+final <- list(cases=full_cases,district_policies=policy,ml=ml,svi=svi,covid=covid)
 analytic <- purrr::reduce(final,inner_join,by=c("qid","school_level")) %>%
   clean_names()%>%
   rename_with(.fn=~gsub("_","",.))

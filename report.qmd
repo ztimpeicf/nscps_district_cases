@@ -52,7 +52,7 @@ The purpose of this analysis is to study the effectiveness of school districts' 
 *County-level characteristics*
 
 -   *Social Vulnerability Index (SVI)*: Overall summary index indicating the relative vulnerability of U.S. Census tracts across four themes: socioeconomic, household composition & disability, minority status & language, and housing type & transportation
--   *COVID-19 case rates (monthly average in accordance with school averages)*
+-   *Change in county COVID-19 case rates*: calculated as difference in average monthly case rate per 100,000 people between October - December and January - March, corresponding with the time period used for calculating school case rate changes
 -   *Region:* Midwest, Northeast, South, West
 -   *State*
 
@@ -67,7 +67,7 @@ More specifically, initial results are summarized as follows. First, table 1 inc
 tbl1 %>%
    DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (median)"="mean_median", "Correlation (p-value)"="est_pval"),
                  style="bootstrap4",
-                 caption = "Table 1: Summary statistics of changes in case rates and covariates",
+                 caption = "Table 1: Summary statistics of changes in case rates and standardized covariates",
                 extensions = 'Buttons', options = list(
                   pageLength=nrow(tbl1),
     dom = 'tB',

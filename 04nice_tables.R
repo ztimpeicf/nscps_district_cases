@@ -9,7 +9,7 @@ replace <- readxl::read_xlsx("construct_texts.xlsx")
 
 # table 1: summary statistics of outcome and covariates
 tbl1 <- summary_statistics %>%
-  filter(str_detect(construct,"changeinrate|percent|rplthemes"))%>%
+  filter(str_detect(construct,"changeinrate|percent|rplthemes|cntycases"))%>%
   left_join(replace,by=c("construct"="construct"))%>%
   left_join(continuous_correlations,by=c("construct"="predictor"))%>%
   transmute(
