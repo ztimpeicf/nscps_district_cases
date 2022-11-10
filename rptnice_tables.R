@@ -61,8 +61,29 @@ tbl4 <- summary_statistics %>%
   )  %>%
   select(Construct=replace,min_max,mean_stdev,`No policy_mean`,`Has policy_mean`,t_estimate)
 
+# Import the machine learning results
+readRDS("forest_list_statistics.rds")%>%
+  list2env(envir=.GlobalEnv)
+# Table 5 is results from using party::cforest to identify the most important
+# predictors
+tbl5 <- covariate_importance%>%
+  left_join(replace,by=c("name"="construct"))%>%
+  mutate(replace = case_when(is.na(replace)~ str_to_title(name), TRUE ~ replace))%>%
+  select(Construct = replace, 'Percent iterations among top 5 predictors'=ranks)%>%
+  arrange(desc(c(2)))
 
 
-tables <- list(tbl1=tbl1,tbl2=tbl2,tbl3=tbl3,tbl4=tbl4)
+# Table 6 is results from using party::cforest to identify the most important
+# predictors from the strategies
+tbl6 <- strategy_importance%>%
+  left_join(replace,by=c("name"="construct"))%>%
+  mutate(replace = case_when(is.na(replace)~ str_to_title(name), TRUE ~ replace))%>%
+  select(Construct = replace, 'Percent iterations among top 5 predictors'=ranks)%>%
+  arrange(desc(c(2)))
+
+
+
+
+tables <- list(tbl1=tbl1,tbl2=tbl2,tbl3=tbl3,tbl4=tbl4,tbl5=tbl5,tbl6=tbl6)
 saveRDS(tables,"output_tables.rds")
 writexl::write_xlsx(tables,path="output_tables.xlsx")

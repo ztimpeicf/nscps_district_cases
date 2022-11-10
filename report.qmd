@@ -20,6 +20,9 @@ readRDS("raw_summary_statistics.rds")%>%
 
 readRDS("output_tables.rds")%>%
   list2env(envir=.GlobalEnv)
+
+readRDS("forest_list_statistics.rds")%>%
+  list2env(envir=.GlobalEnv)
 ```
 
 # Introduction
@@ -108,7 +111,39 @@ tbl4 %>%
                  style="bootstrap4",
                  caption = "Table 4: Summary statistics and t-test results of policies dichotimized by scoring at or above 75th percentile",
                 extensions = 'Buttons', options = list(
-    pageLength=nrow(tbl3),
+    pageLength=nrow(tbl4),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+## Machine learning results
+
+Due to limited sample size, it was important to apriori exclude the least relevant predictors. As such, we developed two machine learning models to rank covariates and strategies (separately) on their importance in predicting changes in case rates. The machine learning models were developed using *cforest* and then variables were ranked using *varimp*, both functions coming from the *party* package. For each set of predictors, the models were estimated 100 times, with the overall ranking computed as the percentage of iterations where a predictor ranked among the top five in importance. Results of the variable selection models are presented in tables 5 (covariates) and 6 (strategies). Among the covariates, six were ranked in the top five over 40% of the iterations, including state (100% of iterations), region (87%), SVI (54%), percent student body Black or African American (44%), total enrollment (42%), and percent student body eligible for free and reduced lunch (41%).
+
+```{r}
+#| echo: false
+tbl5 %>%
+   DT::datatable(rownames = FALSE,
+                 style="bootstrap4",
+                 caption = "Table 5: Covariate importance results from machine learning models",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl5),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+Table six shows results for strategy predictors. Four of the 10 strategies were a top five predictor at least 40% of the iterations. This includes vaccination (100% of the iterations), testing and/or screening (99%), physical distancing (51%), and cohorting and/or staggering (47%). Cleaning strategies were only important 6% of the iterations, and staying home was never an important predictor.
+
+```{r}
+#| echo: false
+tbl6 %>%
+   DT::datatable(rownames = FALSE,
+                 style="bootstrap4",
+                 caption = "Table 6: Strategy importance results from machine learning models",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl6),
     dom = 'tB',
     buttons = c('excel', 'copy'))
                  )
