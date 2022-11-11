@@ -69,7 +69,7 @@ readRDS("forest_list_statistics.rds")%>%
 tbl5 <- covariate_importance%>%
   left_join(replace,by=c("name"="construct"))%>%
   mutate(replace = case_when(is.na(replace)~ str_to_title(name), TRUE ~ replace))%>%
-  select(Construct = replace, 'Percent iterations among top 5 predictors'=ranks)%>%
+  select(Construct = replace, 'Percent'=pos_ranked)%>%
   arrange(desc(c(2)))
 
 
@@ -78,7 +78,7 @@ tbl5 <- covariate_importance%>%
 tbl6 <- strategy_importance%>%
   left_join(replace,by=c("name"="construct"))%>%
   mutate(replace = case_when(is.na(replace)~ str_to_title(name), TRUE ~ replace))%>%
-  select(Construct = replace, 'Percent iterations among top 5 predictors'=ranks)%>%
+  select(Construct = replace, 'Percent'=pos_ranked)%>%
   arrange(desc(c(2)))
 
 

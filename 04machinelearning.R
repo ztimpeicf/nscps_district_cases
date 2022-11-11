@@ -34,10 +34,13 @@ covariate_importance <- purrr::map_dfr(numbers, function(x){
     mutate(rank = row_number())
 }) %>%
   group_by(name)%>%
-  summarise(ranks = sum(rank <= 5)/length(numbers)*100)%>%
+  summarise(ranks = sum(rank <= 5)/length(numbers)*100,
+            positives = sum(value > 0)/length(numbers)*100,
+            pos_ranked = sum(value > 0 & rank <= 5)/length(numbers)*100
+            )%>%
   ungroup()%>%
-  select(name,ranks)%>%
-  arrange(desc(ranks))
+  select(name,positives,ranks,pos_ranked)%>%
+  arrange(desc(pos_ranked))
 
 # Same thing for the policy variables
 # 
@@ -61,10 +64,13 @@ strategy_importance <- purrr::map_dfr(numbers, function(x){
     mutate(rank = row_number())
 }) %>%
   group_by(name)%>%
-  summarise(ranks = sum(rank < 5)/length(numbers)*100)%>%
+  summarise(ranks = sum(rank < 5)/length(numbers)*100,
+            positives = sum(value > 0 )/length(numbers)*100,
+            pos_ranked = sum(value >0 & rank <= 5)/length(numbers)*100
+            )%>%
   ungroup()%>%
-  select(name,ranks)%>%
-  arrange(desc(ranks))
+  select(name,positives,ranks,pos_ranked)%>%
+  arrange(desc(pos_ranked))
 
 # write results to excel file
 forest_list <- list(covariate_importance=covariate_importance,strategy_importance=strategy_importance)

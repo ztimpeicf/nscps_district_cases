@@ -5,84 +5,118 @@ library(dplyr)
 library(tidyr)
 library(purrr)
 
-
+# Read in analytic data and standardize
 full_df <- readRDS("analytic_data.rds")
 
 df <- full_df %>%
   select(changeinrate,region,locale,district,state,ends_with("quarter.75"),derivedtotalenrolled,percentamericanindianoralaskanative:cntycaseschange)%>%
   mutate(
-  across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T)))%>%
-  #na.omit()%>%
+   across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T))
+        )%>%
   rename_with(.fn=~gsub("quarter.75","",.x),ends_with("75"))
 
+# Read in machine learning results to select covariates for models
+readRDS("forest_list_statistics.rds")%>%
+  list2env(envir=.GlobalEnv)
+# Check state, region, locale, and district for evidence of significant variation between groups
 
-# Check region and district for evidence of significan variation between groups
+## MLM sequence
+# 1 test empty models with higher level variables to determine if MLM is appropriate
+#   Use the ranova as an official means
+#   Calculate ICC as well
 randos <- c("region","locale","district","state")
 names(randos) <- randos
 
-r_test <- function(x,y="changeinrate",df){
+empty_models <- function(x,y="changeinrate",df){
   
-  glue::glue("{ y } ~ (1|{ x })")%>%
+  tmp <- glue::glue("{ y } ~ (1|{ x })")%>%
     as.formula()%>%
-    lmer(.,data=df, REML = FALSE) %>%
-     lmerTest::ranova()%>%
-      select(pval = last_col())%>%
-       na.omit()%>%
-        tibble::deframe()
+    lmer(.,data=df, REML = FALSE) 
+  
+  out <- tmp %>%
+    lmerTest::ranova()    %>%
+    select(pval = last_col())%>%
+    na.omit()%>%
+    tibble::deframe()
+  
+  var_dev <- summary(tmp)%>%
+    .[["varcor"]]%>%
+    .[[x]]%>%
+    attr(.,"stddev")
+  
+  resid_dev <- summary(tmp)%>%
+    .[["varcor"]]%>%
+    attr(.,"sc")
+  
+  icc <-(var_dev^2)/(var_dev^2 + resid_dev^2)
+  
+  tibble(pval= out,icc=icc)
 }
 
-r_test(x="region",y="changeinrate",df=full_df)
-level_vars <- purrr::map_df(randos,r_test,.id="variable",y="changeinrate",df=full_df)%>%
-  pivot_longer(cols=everything(),names_to="variable",values_to="pvalue")
-level_vars <- purrr::map_df(randos,r_test,.id="variable",df=df)%>%
-  pivot_longer(cols=everything(),names_to="variable",values_to="pvalue")
-lmer(changeinrate ~ (1|region),data=full_df,REML=F)
-# %>%
-#   filter(pvalue < .10)%>%
-#   select(variable)%>%
-#   pull()
-# The only higher-level variable with significant association to the case counts 
-# was the region variable. Will include this in initial analyses but not locale nor
-# district.
-covariates <- df %>%
-  select(derivedtotalenrolled:cntycaseschange) %>%
-  names()
-# Covariates as significant predictors?
-tmp <- paste0(covariates,collapse = " + ")
-check_covs <- paste0("log_rate ~ ",tmp, " + (1|region)")%>%
-  as.formula()%>%
-  lmer(.,data=df, REML = FALSE) 
+empty_results <- purrr::map_df(randos,empty_models,.id="variable",df=full_df)
 
-%>%
-  summary()%>%
-  pluck("coefficients")%>%
-  as_tibble(rownames="name")
+#The only nesting variable to have a significant association was state, with an 
+# ICC of around .1. These results align with the machine learning results 
+# pointing to state as the strongest predictor.
 
-covs_for_model <- check_covs %>%
-  janitor::clean_names()%>%
-  filter(abs(t_value)> 1,!name=="(Intercept)")%>%
-  select(name)%>%
-  pull()
+#########################################3
 
-
-strategy_model <- function(x,y=covs_for_model){
-  tmp <- paste0(covs_for_model,collapse = " + ")
-  glue::glue("log_rate ~ { x } + { tmp } + (1|region)")%>%
-    as.formula()%>%
-    lmer(.,data=df) %>%
-     summary()
-}
-
+# 2 fit the models with one for each individual strategy
 strategies <- df %>%
   select(vaccination:ventilation)%>%
   names()
 
-models <- map(strategies,strategy_model)
+# For covariates at the school level, take the predictors that were among the top 
+# five at least 20% of the iterations at the machine learning stage.
 
-strategy_coefs <- map_df(models,~pluck(.x,"coefficients")%>%
-                                  tibble::as_tibble(rownames="name")
-                         )%>%
+school_covariates <- covariate_importance %>%
+  filter(pos_ranked >= 20, !name %in% c("region","state"))%>%
+  select(name)%>%
+  pull()
+
+# Function to test each strategy without other strategies as predictors
+
+strategy_model <- function(x,y=school_covariates){
+  tmp <- paste0(y,collapse = " + ")
+  glue::glue("changeinrate ~ { x } + { tmp } + cntycaseschange + (1|state)")%>%
+    as.formula()%>%
+    lmer(.,data=df)
+}
+
+individual_strategies_results <- map(strategies,strategy_model)
+
+boottype <- "perc"
+
+strategy_cis <- function(x,b=boottype){
+  coefs <- summary(x)%>%
+    pluck("coefficients")  %>%
+    tibble::as_tibble(rownames="name")
+  
+  cis <- confint(x,method=c("boot"),boot.type=b)%>%
+    tibble::as_tibble(rownames="name")%>%
+    magrittr::set_colnames(c("name","lower","upper"))
+  
+  final <- left_join(coefs,cis,by="name")
+}
+
+#test <- strategy_cis(x=individual_strategies_results[[1]])
+individual_strategies_coefs <- map_df(individual_strategies_results,strategy_cis)%>%
   filter(name %in% strategies)
 
-# Test CI generations
-test <- confint(models[[1]],method=c("boot"),boot.type=c("perc"))
+
+# 3 fit the model with all strategies as predictors
+# All strategies in one model
+all_strategies <- paste0(strategies,collapse = " + ")
+school_covs = paste0(school_covariates,collapse="+")
+all_strats_results <- paste0("changeinrate ~ ",all_strategies,"+",school_covs,"+ cntycaseschange + (1|state)")%>%
+  as.formula()%>%
+  lmer(.,data=df)
+
+all_strats_results <- strategy_cis(all_strats_results)%>%
+  filter(name %in% strategies)
+
+# 4 check model assumptions
+
+# 5 Summarise results
+
+
