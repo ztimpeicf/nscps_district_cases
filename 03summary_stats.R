@@ -15,18 +15,6 @@
 # 
 # locale, region*
 # 
-# POLICY VARIABLES
-# Vaccination max: 21*
-# Etiquette max: 8*
-# Masks max: 15*
-# Physical distancing max: 6*
-# Cohorting or staggering max: 3*
-# Testing and Screening max: 8*
-# Stay Home max: 10*
-# Trace and Quarantine max: 10*
-# Cleaning max: 6*
-# Ventilation max: 16*
-# 
 library(dplyr)
 library(tidyr)
 library(purrr)
@@ -38,7 +26,7 @@ df <- full_df %>%
   filter(!is.na(changeinrate))
 
 predictors <- df %>%
-  select(vaccination:ventilation,starts_with(c("cnty","percent","rpl")),ends_with(c("50","75","quarter","nonzero","cntycases"))) %>%
+  select(vaccination:hvacsystems,starts_with(c("cnty","percent","rpl"))) %>%
   names()
 
 list_sum_stats <- list(n=~sum(!is.na(.)),
@@ -58,9 +46,8 @@ summary_statistics <- df %>%
   pivot_wider(names_from = prob,values_from=tiles)
 
 dichotomous_vars <- summary_statistics %>%
-  filter(!min==max)%>%
+  filter(max==1)%>%
   select(construct)%>%
-  filter(str_detect(construct,"50$|75$|nonzero$"))%>%
   pull()%>%
   rlang::set_names()
 
@@ -91,7 +78,7 @@ dichotomous_ns <- map_dfr(dichotomous_vars,n_fn,.id="construct")%>%
 dichotomous_stats <- inner_join(dichotomous_ns,ttest_results)
 
 # ANOVA looking at region and locale
-categorical_vars <- c("region","locale")
+categorical_vars <- c("region","locale","state")
 
 anovas <- map_dfr(categorical_vars, ~
   glue::glue("changeinrate ~ {.x}")%>%
@@ -104,7 +91,7 @@ anovas <- map_dfr(categorical_vars, ~
 # Pearson correlations for the continuous variables
 continuous_vars <-summary_statistics %>%
   select(construct)%>%
-  filter(!str_detect(construct,"50$|75$|changeinrate"))%>%
+  filter(str_detect(construct,"^cnty|^percent|^rpl"))%>%
   pull()
 
 scaled_df <- df %>%

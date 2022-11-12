@@ -39,8 +39,14 @@ full_cases <- cleaned %>%
 # Use Quarter as period of strategy onset
 # Use item scores to calculate sum score rather than 
 # using pre-calculated sum scores (columns ending in SS)
-policy_items <- readxl::read_xlsx("district_policy_items.xlsx")%>%
-  mutate(Item = str_replace_all(Item,"[:punct:]",""))%>%
+policy_info <- readxl::read_xlsx("district_policy_items.xlsx")
+policy_selections <- policy_info %>%
+  filter(cdc==1)%>%
+  mutate(Item = str_replace_all(Item,"[:punct:]",""))
+policy_items <- policy_info %>%
+  mutate(Item = str_replace_all(Item,"[:punct:]","")) %>%
+  filter(cdc==1)%>%
+  select(c(1:2))%>%
   tibble::deframe()
 
 policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
@@ -48,10 +54,17 @@ policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
   pivot_longer(cols=6:46)%>%
   mutate(name = str_replace_all(name,"[:punct:]",""),
          construct = stringr::str_replace_all(name,policy_items))%>%
+  filter(name %in% names(policy_items))%>%
+  left_join(policy_selections, by=c("name"="Item","construct"="Construct"))%>%
+  mutate(achieved = ifelse(value==score_needed,1,0))%>%
+  select(-c(name,value,cdc,score_needed))%>%
   group_by(across(qid:Quarter),construct)%>%
-  mutate(total = sum(value,na.rm=T))%>%
+  mutate(total = case_when((operation == "either" & sum(achieved)>0)|
+                             (operation=="all" & sum(achieved)==n())~1,
+                           TRUE ~ 0)
+  )%>%
+  select(-operation,-achieved)%>%
   ungroup()%>%
-  select(-name,-value)%>%
   unique()%>%
   pivot_wider(id_cols=qid:Quarter,names_from=construct,values_from=total)%>%
   mutate(Quarter = str_extract(Quarter,"^[:alpha:]+"))%>%

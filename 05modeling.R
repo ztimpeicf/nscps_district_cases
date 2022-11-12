@@ -9,11 +9,11 @@ library(purrr)
 full_df <- readRDS("analytic_data.rds")
 
 df <- full_df %>%
-  select(changeinrate,region,locale,district,state,ends_with("quarter.75"),derivedtotalenrolled,percentamericanindianoralaskanative:cntycaseschange)%>%
+  select(changeinrate,region,locale,schoollevel,state, vaccination:hvacsystems,
+         derivedtotalenrolled,percentamericanindianoralaskanative:cntycaseschange)%>%
   mutate(
    across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T))
-        )%>%
-  rename_with(.fn=~gsub("quarter.75","",.x),ends_with("75"))
+        )
 
 # Read in machine learning results to select covariates for models
 readRDS("forest_list_statistics.rds")%>%
@@ -24,7 +24,7 @@ readRDS("forest_list_statistics.rds")%>%
 # 1 test empty models with higher level variables to determine if MLM is appropriate
 #   Use the ranova as an official means
 #   Calculate ICC as well
-randos <- c("region","locale","district","state")
+randos <- c("region","locale","state")
 names(randos) <- randos
 
 empty_models <- function(x,y="changeinrate",df){
@@ -63,14 +63,14 @@ empty_results <- purrr::map_df(randos,empty_models,.id="variable",df=full_df)
 
 # 2 fit the models with one for each individual strategy
 strategies <- df %>%
-  select(vaccination:ventilation)%>%
+  select(vaccination:hvacsystems)%>%
   names()
 
 # For covariates at the school level, take the predictors that were among the top 
 # five at least 20% of the iterations at the machine learning stage.
 
 school_covariates <- covariate_importance %>%
-  filter(pos_ranked >= 20, !name %in% c("region","state"))%>%
+  filter(pos_ranked > 0, !name %in% c("region","state"))%>%
   select(name)%>%
   pull()
 
@@ -78,7 +78,7 @@ school_covariates <- covariate_importance %>%
 
 strategy_model <- function(x,y=school_covariates){
   tmp <- paste0(y,collapse = " + ")
-  glue::glue("changeinrate ~ { x } + { tmp } + cntycaseschange + (1|state)")%>%
+  glue::glue("changeinrate ~ { x } + { tmp } + (1|state)")%>%
     as.formula()%>%
     lmer(.,data=df)
 }

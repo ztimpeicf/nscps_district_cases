@@ -8,14 +8,17 @@ library(tidyr)
 full_df <- readRDS("analytic_data.rds")
 
 df <- full_df %>%
-  select(changeinrate,region,locale,district,state,ends_with("quarter.75"),derivedtotalenrolled,percentamericanindianoralaskanative:cntycaseschange)%>%
-  mutate(across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T)))%>%
-  rename_with(.fn=~gsub("quarter.75","",.x),ends_with("75"))
+  select(changeinrate,region,locale,state,schoollevel,
+         vaccination:hvacsystems,derivedtotalenrolled,
+         percentamericanindianoralaskanative:cntycaseschange
+         )%>%
+  mutate(across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T))
+         )
 
 # set multiple seeds as party package suggests
 numbers <- seq.int(from=1, to=1000, by = 10)
 # Covariates df
-forest_df <- df %>% select(changeinrate,state,region,locale,rplthemes,derivedtotalenrolled,cntycaseschange,contains("percent"))%>%
+forest_df <- df %>% select(-c(vaccination:hvacsystems))%>%
   mutate(across(where(is.character),~ factor(.)))%>%
   na.omit()
 
@@ -45,7 +48,7 @@ covariate_importance <- purrr::map_dfr(numbers, function(x){
 # Same thing for the policy variables
 # 
 # strategy df
-strategy_df <- df %>% select(changeinrate,vaccination:ventilation)%>%
+strategy_df <- df %>% select(changeinrate,vaccination:hvacsystems)%>%
   mutate(across(where(is.character),~ factor(.)))%>%
   na.omit()
 
