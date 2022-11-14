@@ -4,9 +4,13 @@ library(lmerTest)
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(HLMdiag)
 
 # Read in analytic data and standardize
-full_df <- readRDS("analytic_data.rds")
+rmve <- readRDS("outlier_schools.rds")
+
+full_df <- readRDS("analytic_data.rds")%>%
+  anti_join(rmve)
 
 df <- full_df %>%
   select(changeinrate,region,locale,schoollevel,state, vaccination:hvacsystems,
@@ -73,11 +77,13 @@ school_covariates <- covariate_importance %>%
   filter(pos_ranked > 0, !name %in% c("region","state"))%>%
   select(name)%>%
   pull()
-
+# Look at school_covariates to decide which covariates to include
 # Function to test each strategy without other strategies as predictors
 
-strategy_model <- function(x,y=school_covariates){
-  tmp <- paste0(y,collapse = " + ")
+strategy_model <- function(x){
+  tmp <- paste0(c("percentblackorafricanamerican","cntycaseschange","rplthemes",
+                  "percentamericanindianoralaskanative" ,"derivedtotalenrolled", 
+                  "schoollevel","locale"),collapse = " + ")
   glue::glue("changeinrate ~ { x } + { tmp } + (1|state)")%>%
     as.formula()%>%
     lmer(.,data=df)
@@ -107,16 +113,33 @@ individual_strategies_coefs <- map_df(individual_strategies_results,strategy_cis
 # 3 fit the model with all strategies as predictors
 # All strategies in one model
 all_strategies <- paste0(strategies,collapse = " + ")
-school_covs = paste0(school_covariates,collapse="+")
+school_covs =paste0(c("percentblackorafricanamerican","cntycaseschange","rplthemes",
+                      "percentamericanindianoralaskanative" ,"derivedtotalenrolled", 
+                      "schoollevel","locale"),collapse = " + ")
 all_strats_results <- paste0("changeinrate ~ ",all_strategies,"+",school_covs,"+ cntycaseschange + (1|state)")%>%
   as.formula()%>%
   lmer(.,data=df)
 
-all_strats_results <- strategy_cis(all_strats_results)%>%
-  filter(name %in% strategies)
+all_strats_results <- strategy_cis(all_strats_results)
 
-# 4 check model assumptions
+#4 Remove a few of the least associated strategies
+few_strategies <- individual_strategies_coefs %>%
+  filter(upper < .2)%>%
+  select(name)%>%
+  pull()%>%
+  paste0(.,collapse=" + ")
 
-# 5 Summarise results
+drop_bottom_strats <- paste0("changeinrate ~ ",few_strategies,"+",school_covs,"+ (1|state)")%>%
+  as.formula()%>%
+  lmer(.,data=df)
+
+# Use the HLMdiag package
+state_diagnostics <- hlm_augment(drop_bottom_strats)%>%
+  arrange(desc(cooksd))
+
+# Generate CIs for final models
+dropped_strats_cis <- drop_bottom_strats %>%
+  strategy_cis()
+# 6 Summarise results
 
 
