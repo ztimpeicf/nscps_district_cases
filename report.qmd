@@ -27,43 +27,57 @@ readRDS("forest_list_statistics.rds")%>%
 
 # Introduction
 
-The purpose of this analysis is to study the effectiveness of school districts' COVID-19 prevention strategies in mitigating the spread of COVID-19 among school-aged children and adolescents. Specifically, for the 2021 - 2022 school year, we collected 1,184 COVID-19 policy documents from the websites of a nationally-representative random sample of 1,286 school districts, as well as monthly case counts from state health departments. As such, the primary research question is, what is the association between districts' COVID-19 prevention policies and subsequent COVID-19 caseloads in schools?
+The purpose of this analysis is to study the effectiveness of school districts' COVID-19 prevention strategies in mitigating the spread of COVID-19 among school-aged children and adolescents.
+
+As such, the primary research question is, what is the association between districts' COVID-19 prevention policies and subsequent COVID-19 caseloads in schools?
 
 # Methods
 
-**Outcome of interest**: Difference between schools' fall and spring monthly average case counts, represented as the difference between the average of schools' monthly number of cases across October, November, and December 2021 and average number of monthly cases for January, February, and March 2022.
+## Data
 
-**Independent variables:** The key predictors of interest consist of 10 categories of COVID-19 mitigation strategies, including:
+This research utilizes school-level COVID-19 case counts and district policy guidance data collected as part of the National School COVID-19 Prevention Study (NSCPS), funded by the Centers for Disease Control and Prevention (CDC). The NSCPS is a nationally representative stratified random sample of 1,602 K-12 public schools across 1,286 districts, drawn to better understand schools' response to the pandemic through the 2021-2022 school year and associated outcomes, including the extent to which prevention strategies were effective in mitigating the spread of COVID-19 among students. As part of the NSCPS, the team scraped and analyzed publicly-posted guidance documents from district websites to identify strategies that were recommended or required of schools. In addition, health departments representing all 50 states and the District of Columbia were contacted and invited to provide any available COVID-19 case count data for the 2021-2022 school year that had been collected from schools comprising the sample.
 
--   *Vaccination*: Establish policies and practices that promote vaccinations among teachers, staff, families, and eligible students by providing information about COVID-19, encouraging vaccine trust and confidence, and making getting vaccinated as easy and convenient as possible. 
--   *Handwashing and Resporitory Etiquette*: Practice handwashing and respiratory etiquette (covering coughs and sneezes) to keep from getting and spreading COVID-19. Teach and reinforce handwashing with soap and water for at least 20 seconds. Remind everyone in the facility to wash hands frequently, and adults assist young children with handwashing. If handwashing is not possible, use hand sanitizer containing at least 60% alcohol. 
--   *Masking*: Teachers, staff, students, and visitors wear masks consistently and correctly (i.e., covering the mouth and nose) indoors regardless of vaccination status for all individuals ages 2 years and older. Unvaccinated people also wear masks outdoors in crowded spaces. All individuals, including students and drivers, wear masks on school buses. 
--   *Physical distancing*: Schools maintain at least 3 feet of physical distance between students within classrooms. A distance of at least 6 feet is recommended between students and teachers/staff and between teachers/staff who are not fully vaccinated. 
--   *Cohorting/Staggering*: Keep people together in a small group and have each group stay together throughout an entire day to limit the number of students, teachers, and staff who come in contact with each other. 
--   *Testing and screening*: Screen and test to identify infected people, including those with or without symptoms (or before development of symptoms) who may be contagious, so that measures can be taken to prevent further transmission. At a minimum, screening testing should be offered to students who have not been fully vaccinated when community transmission is at moderate, substantial, or high levels. At all levels of community transmission, screening testing should be offered to all teachers and staff who have not been fully vaccinated.  
--   *Staying home*: Anyone with COVID-19 stays home and isolated from other people for 10 days. Schools should provide excused absences for students who are sick. Schools should also allow flexible, non-punitive, and supportive paid sick leave policies and practices that encourage sick workers to stay home without fear of retaliation, loss of pay, or loss of employment level.  
--   *Trace and quarantine*: Collaborate with state and local health departments to the extent allowable by privacy and other applicable laws to confidentially provide information about people diagnosed with or exposed to COVID-19. While students, teachers, and staff with positive COVID-19 test results should isolate, contact tracing helps identify close contacts who should quarantine and closely monitor for symptoms.
--   *Cleaning*: Clean school surfaces at least once a day to remove potential virus particles. Use disinfectants on the U.S. Environmental Protection Agency COVID-19 list to kill any remaining germs on surfaces. 
--   *Ventilation*: Bring fresh outdoor air into a building to help keep virus particles from concentrating inside. This can be done by opening doors and windows, using child-safe fans to increase circulation, and making changes to HVAC or air filtration systems. Open or crack windows in buses and other forms of transportation if doing so does not pose a safety risk. 
+## Measures
+
+**Outcome of interest**: The difference between schools' spring and fall monthly average case counts, characterized as the average of schools' monthly number of cases per 100 students across January, February, and March 2022 minus the average of October, November, and December 2021 monthly cases per 100 students.
+
+**Independent variables:** The key predictors of interest consist of 10 dichotomous indicators of COVID-19 mitigation strategies aligned as stringently with CDC guidance as possible. Furthermore, a mitigation strategy was considered in place if it was on the district website and had been updated during fall of 2021. These 10 strategy indicators include:
+
+-   *Vaccination offered*: Offered vaccines at district-sponsored events to teachers and staff and/or students.
+-   *Universal masking requirement*: Teachers, staff, and students required to wear masks consistently and correctly (i.e., covering the mouth and nose) at school.
+-   *Physical distancing*: Students maintain at least 3 feet of physical distance between each other indoors.
+-   *Screening testing for students*: Encouraged/recommended/offered screening testing of students on a regular basis.
+-   *Staying home when sick*: Encouraged or recommended that students stay home when sick or tested positive for COVID-19.
+-   *Contact tracing*: Encouraged or recommended that schools conduct contact tracing.
+-   *Quarantine*: Required students to quarantine if identified to be a close contact.
+-   *Cleaning*: Required schools to clean high touch surfaces at least once a day or between uses.
+-   *HEPA filters*: Encouraged/recommended/offered use of high-efficiency particulate air (HEPA) filters.
+-   *HVAC systems*: Encouraged/recommended/offered replacing, upgrading, maintaining, or inspecting HVAC systems.
 
 *School-level characteristics*
 
--   *Percent student body eligible for free and reduced lunch*
+-   *Percent student body eligible for free and reduced lunch*: The percent of the schools' students who were eligible or free and reduced lunch
 -   *School locale*: City, Rural, Suburb, Town, Missing
 -   *Percent of student body Asian, American Indian or Alaska Native, Black/African American, Hispanic/Latino, Native Hawaiian or other Pacific Islander, Not specific, Two or more races, and White (each race/ethnicity represented individually)*
 
 *County-level characteristics*
 
 -   *Social Vulnerability Index (SVI)*: Overall summary index indicating the relative vulnerability of U.S. Census tracts across four themes: socioeconomic, household composition & disability, minority status & language, and housing type & transportation
--   *Change in county COVID-19 case rates*: calculated as difference in average monthly case rate per 100,000 people between October - December and January - March, corresponding with the time period used for calculating school case rate changes
--   *Region:* Midwest, Northeast, South, West
--   *State*
+-   *Change in county COVID-19 case rates*: Difference in average of 7-day rolling average for the 15th of each month case rate per 100,000 people between October - December and January - March, corresponding with the time period used for calculating school case rate changes
+-   *Region*: Midwest, Northeast, South, West
+-   *State*: 20 states (should we list them?)
+
+## Analyses
+
+In total, policy documents from 1,184 of 1,286 (92%) of the districts were collected. Twenty of the 51 health departments provided case count data for 332 (CONFIRM) of the 1,602 schools (21%). Schools without at least one month of reporting during the spring and fall periods were dropped, with listwise deletion across the explanatory variables. This resulted in a final analytic sample of 332 across 20 states and X districts.
+
+All analyses were conducted using R version 4.2.1. Prior to modeling, potential outliers with respect to average cases per 100 students were identified by calculating influence diagnostics, including Cook's Distance and difference in fits (DFFITS) (cite). Of the 332 schools, 17 had high values relative to the average () and were therefore dropped from subsequent analyses. Following removal of outliers, summary statistics were calculated, as well as t-tests for mean differences between groups defined by the presence of the strategy guidance during the fall 2021 semester and Pearson's correlation coefficient between changes in case rates per 100 students and continuous outcomes.
+
+The final modeling sequence consisted of two stages, first developing Random Forest algorithms for identifying the most predictive covariates and strategies in the event that sample size required estimation of fewer parameters; and secondly estimating a series of multilevel regression models beginning with a set of models where covariates and one strategy is included, and finally a full model including all relevant covariates and individual strategies of interest. Random Forest algorithms are useful for ranking variables based on their predictive association with the outcome of interest. Due to limited sample size, it was important to a priori exclude the least relevant predictors. As such, we developed two machine learning models to rank covariates and strategies (separately) on their importance in predicting changes in case rates. The machine learning models were developed using *cforest* and then variables were ranked using *varimp*, both functions coming from the *party* package. For each set of predictors, the models were estimated 100 times, with the overall ranking computed as the percentage of iterations where a predictor ranked among the top five in importance. Multilevel modeling will account for the potential nesting of schools within districts, states, and region.
 
 # Results
 
-As we explore the data there are multiple avenues to framing district policies, one prominent characteristic being *when* policies were enacted. For the current study, we distinguish between policies enacted during the fall and spring semesters, re-scoring those enacted during the spring semester as not being in place. Given that the policies were scored on continuous scales (see table 2), they can also be assessed as categorical (i.e., dichotomous) indicators. For this initial review, policies are dichotimized by zero/nonzero scores and whether policy scored in 75th percentile, yielding three sets of summaries: continuous, comparison of no policy/policy, and policies below and at or above 75th percentile. For continuous variables, Pearson's correlation coefficient is calculated as an initial measure of association with the change in case rates between spring and fall (see tables 1 and 2). For dichotomous indicators, t-tests are conducted, comparing the average change in case rates between schools with and without the strategies in place (table 3 for no policy/policy; table 4 for 75th percentile).
-
-More specifically, initial results are summarized as follows. First, table 1 includes summary statistics of the outcome of interest (change in case rate) as well as covariates. Table 2 provides the summary statistics, including Pearson's correlation coefficients, for strategies operationalized as a continuous variable (0 meaning no strategy in place; max indicating the max score possible for a given strategy). Tables 3 and 4 review summary statistics and t-test results from strategies dichotimized as 0 if not having a policy or enactment during spring/below 75th percentiles, and 1 if having any policy during the fall/scoring at 75th percentile or greater.
+Table 1 provides summary statistics, including Pearson's correlation coefficient, for the change in case rate and covariates. Three hundred thirty-two schools had available case data for fall and spring, with an average of 1.51 more cases per month during the spring of 2022 than fall 2021. Suprisingly, none of the school-level covariates were significantly associated with changes in cases per 100 students.
 
 ```{r}
 #| echo: false
@@ -78,31 +92,7 @@ tbl1 %>%
                  )
 ```
 
-```{r}
-#| echo: false
-tbl2 %>%
-   DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (median)"="mean_median", "Correlation (p-value)"="est_pval"),
-                 style="bootstrap4",
-                 caption = "Table 2: Summary statistics of strategies treated as continuous and correlations with changes in case rates",
-                extensions = 'Buttons', options = list(
-    pageLength=nrow(tbl2),
-    dom = 'tB',
-    buttons = c('excel', 'copy'))
-                 )
-```
-
-```{r}
-#| echo: false
-tbl3 %>%
-   DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (ST Dev)"="mean_stdev", "Difference in means (p-value)"="t_estimate", 'No policy'='No policy_mean','Has policy'='Has policy_mean'),
-                 style="bootstrap4",
-                 caption = "Table 3: Summary statistics and t-test results of dichotomized policies: Comparing no-policy to policy",
-                extensions = 'Buttons', options = list(
-    pageLength=nrow(tbl3),
-    dom = 't B',
-    buttons = c('excel', 'copy'))
-                 )
-```
+Table 2 reviews summary statistics and t-test results of the 10 prevention strategies, all dichotomized with a score of one if the district guidance was updated during the fall 2021 semester and met the criterion identified in the measures section above.
 
 ```{r}
 #| echo: false
@@ -117,9 +107,7 @@ tbl4 %>%
                  )
 ```
 
-## Machine learning results
-
-Due to limited sample size, it was important to a priori exclude the least relevant predictors. As such, we developed two machine learning models to rank covariates and strategies (separately) on their importance in predicting changes in case rates. The machine learning models were developed using *cforest* and then variables were ranked using *varimp*, both functions coming from the *party* package. For each set of predictors, the models were estimated 100 times, with the overall ranking computed as the percentage of iterations where a predictor ranked among the top five in importance. Results of the variable selection models are presented in tables 5 (covariates) and 6 (strategies). Among the covariates, six were ranked in the top five over 40% of the iterations, including state (100% of iterations), region (87%), SVI (54%), percent student body Black or African American (44%), total enrollment (42%), and percent student body eligible for free and reduced lunch (41%).
+Tables three and four review results of the Random Forest machine learning algorithms, corresponding with covariate and strategy importance rankings, respectively.
 
 ```{r}
 #| echo: false
@@ -134,8 +122,6 @@ tbl5 %>%
                  )
 ```
 
-Table six shows results for strategy predictors. Four of the 10 strategies were a top five predictor at least 40% of the iterations. This includes vaccination (100% of the iterations), testing and/or screening (99%), physical distancing (51%), and cohorting and/or staggering (47%). Cleaning strategies were only important 6% of the iterations, and staying home was never an important predictor.
-
 ```{r}
 #| echo: false
 tbl6 %>%
@@ -148,5 +134,7 @@ tbl6 %>%
     buttons = c('excel', 'copy'))
                  )
 ```
+
+Table five shows results of individual for strategy predictors. Four of the 10 strategies were a top five predictor at least 40% of the iterations. This includes vaccination (100% of the iterations), testing and/or screening (99%), physical distancing (51%), and cohorting and/or staggering (47%). Cleaning strategies were only important 6% of the iterations, and staying home was never an important predictor.
 
 # Discussion

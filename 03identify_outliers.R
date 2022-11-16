@@ -14,7 +14,8 @@ df <- full_df %>%
   mutate(
     across(derivedtotalenrolled:cntycaseschange,~ (. - mean(.,na.rm=T)) / sd(.,na.rm=T)),
     ind = row_number()
-  )
+  )%>%
+  relocate(ind,.before=c(1))
 
 # Test for outliers using the HLMdiag package. Follow book
 # Use key strategy and covariate predictors
@@ -30,11 +31,10 @@ out_model <- paste0(predictor_names,collapse = " + ")%>%
   lmer(.,data=df)
 
 # Use the HLMdiag package
-state_diagnostics <- hlm_augment(out_model)%>%
-  arrange(desc(cooksd))
+state_diagnostics <- hlm_augment(out_model)
 
 outlier_schools <- state_diagnostics %>%
-  filter((cooksd > quantile(cooksd,seq(0,1,.05))[20]))%>%
+  filter((cooksd > quantile(cooksd,seq(0,1,.025))[40]))%>%
   select(id)%>%
   pull()
 

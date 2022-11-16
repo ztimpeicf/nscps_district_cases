@@ -11,6 +11,11 @@ rmve <- readRDS("outlier_schools.rds")
 
 full_df <- readRDS("analytic_data.rds")%>%
   anti_join(rmve)
+# test <- full_df %>%
+#   select(changeinrate)%>%
+#   na.omit()
+# 
+# hist(test$changeinrate,breaks=100)
 
 df <- full_df %>%
   select(changeinrate,region,locale,schoollevel,state, vaccination:hvacsystems,
@@ -136,10 +141,17 @@ drop_bottom_strats <- paste0("changeinrate ~ ",few_strategies,"+",school_covs,"+
 # Use the HLMdiag package
 state_diagnostics <- hlm_augment(drop_bottom_strats)%>%
   arrange(desc(cooksd))
-
+saveRDS(state_diagnostics,"diagnostics.rds")
 # Generate CIs for final models
 dropped_strats_cis <- drop_bottom_strats %>%
   strategy_cis()
+
+# Look at residuals for bias
+hist(state_diagnostics$.ls.resid,freq=FALSE)
+#lines(density(state_diagnostics$.resid))
+qqnorm(scale(state_diagnostics$.ls.resid))
+qqline(scale(state_diagnostics$.ls.resid))
 # 6 Summarise results
+
 
 
