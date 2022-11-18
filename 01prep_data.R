@@ -70,20 +70,26 @@ policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
   mutate(Quarter = str_extract(Quarter,"^[:alpha:]+"))%>%
   rename(policy_month=Month,quarter_enacted=Quarter)
 
-policy %>%
-summarise(across(where(is.numeric),~max(.,na.rm=TRUE)))%>%
-  View()
+#policy %>%
+#summarise(across(where(is.numeric),~max(.,na.rm=TRUE)))
 
 # School characteristics
-nces <- readRDS("raw_data/nces_stats.rds")%>%
-  select(ncessch,derived_total_enrolled:last_col())%>%
-  unique()
+nces <- readRDS("raw_data/nces_2021.rds")%>%
+  select(ncessch,derived_total_enrolled=total_enrolled,everything())%>%
+  unique()%>%
+  rename_with(.fn=~gsub("_","",.x),starts_with("percent"))%>%
+  rename_with(.fn=~gsub("enr","",.x),starts_with("percent"))
 
 # School information from the masterlist
+locale <- readRDS("raw_data/locale.rds")
 ml <- readRDS("raw_data/sampling_masterlist.rds")%>%
   select(ncessch,qid,school_level,enrollment,state,fips,region,locale)%>%
-  inner_join(nces,by="ncessch",na_matches="never")
-
+  left_join(nces,by="ncessch",na_matches="never")%>%
+  mutate(derived_total_enrolled = ifelse(is.na(derived_total_enrolled),enrollment,derived_total_enrolled),
+         locale = na_if(locale, "Missing")) %>% # locale variable
+           rows_patch(locale, by = "ncessch", unmatched = "ignore") 
+  
+table(ml$locale,useNA="always")
 # SVI information
 svi <- readRDS("raw_data/svi.rds")%>%
   clean_names()%>%

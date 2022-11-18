@@ -4,10 +4,11 @@
 library(party)
 library(dplyr)
 library(tidyr)
-rmve <- readRDS("outlier_schools.rds")
+#rmve <- readRDS("outlier_schools.rds")
 
-full_df <- readRDS("analytic_data.rds")%>%
-  anti_join(rmve)
+full_df <- readRDS("analytic_data.rds")
+#%>%
+ # anti_join(rmve)
 
 df <- full_df %>%
   select(changeinrate,region,locale,state,schoollevel,

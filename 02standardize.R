@@ -15,9 +15,9 @@ strategies <- c("vaccination","masks","physicaldistancing",
 # for each strategy indicating if strategy scores in 75th percentile or greater
 final <- analytic %>%
   filter(month %in% c("October","January"))%>%
-  select(-c(hd,student,date,policymonth),-c(americanindianoralaskanative:white))%>%
+  select(-c(hd,student,date,policymonth))%>%
   group_by(qid,schoollevel)%>%
-  mutate(caserate = rollingmean/enrollment*100)%>%
+  mutate(caserate = rollingmean/derivedtotalenrolled*100)%>%
   select(qid,schoollevel,district,month,quarterenacted,enrollment,caserate,everything(),-rollingmean)%>%
   group_by(qid,schoollevel)%>%
   pivot_wider(names_from=month,values_from=caserate)%>%
@@ -27,7 +27,7 @@ final <- analytic %>%
          across(all_of(strategies),~case_when(quarterenacted %in% c("First","Second")~.,
                                               TRUE ~ 0))
   )%>%
-  relocate(changeinrate,.before=vaccination)
+  relocate(derivedtotalenrolled,changeinrate,.before=vaccination)
 
 saveRDS(final,"analytic_data.rds")
 writexl::write_xlsx(final,path="analytic_data.xlsx")

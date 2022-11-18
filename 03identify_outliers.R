@@ -34,7 +34,7 @@ out_model <- paste0(predictor_names,collapse = " + ")%>%
 state_diagnostics <- hlm_augment(out_model)
 
 outlier_schools <- state_diagnostics %>%
-  filter((cooksd > quantile(cooksd,seq(0,1,.025))[40]))%>%
+  filter((cooksd == max(cooksd,na.rm=T)))%>%
   select(id)%>%
   pull()
 

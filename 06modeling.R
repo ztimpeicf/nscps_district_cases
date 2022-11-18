@@ -79,17 +79,18 @@ strategies <- df %>%
 # five at least 20% of the iterations at the machine learning stage.
 
 school_covariates <- covariate_importance %>%
-  filter(pos_ranked > 0, !name %in% c("region","state"))%>%
+  filter(pos_ranked > 30, !name %in% c("region","state"))%>%
   select(name)%>%
   pull()
 # Look at school_covariates to decide which covariates to include
 # Function to test each strategy without other strategies as predictors
 
-strategy_model <- function(x){
-  tmp <- paste0(c("percentblackorafricanamerican","cntycaseschange","rplthemes",
-                  "percentamericanindianoralaskanative" ,"derivedtotalenrolled", 
-                  "schoollevel","locale"),collapse = " + ")
-  glue::glue("changeinrate ~ { x } + { tmp } + (1|state)")%>%
+strategy_model <- function(x,y=school_covariates){
+  tmp <- paste0(school_covariates,collapse=" + ")
+  #tmp <- paste0(c("percentblackorafricanamerican","cntycaseschange","rplthemes",
+   #               "percentamericanindianoralaskanative" ,"derivedtotalenrolled", 
+    #              "schoollevel","locale"),collapse = " + ")
+  glue::glue("changeinrate ~ { x } + { tmp } + (1|region/state)")%>%
     as.formula()%>%
     lmer(.,data=df)
 }
@@ -118,10 +119,8 @@ individual_strategies_coefs <- map_df(individual_strategies_results,strategy_cis
 # 3 fit the model with all strategies as predictors
 # All strategies in one model
 all_strategies <- paste0(strategies,collapse = " + ")
-school_covs =paste0(c("percentblackorafricanamerican","cntycaseschange","rplthemes",
-                      "percentamericanindianoralaskanative" ,"derivedtotalenrolled", 
-                      "schoollevel","locale"),collapse = " + ")
-all_strats_results <- paste0("changeinrate ~ ",all_strategies,"+",school_covs,"+ cntycaseschange + (1|state)")%>%
+school_covs <- paste0(school_covariates,collapse = " + ")
+all_strats_results <- paste0("changeinrate ~ ",all_strategies,"+",school_covs," + (1|region/state)")%>%
   as.formula()%>%
   lmer(.,data=df)
 
@@ -129,29 +128,34 @@ all_strats_results <- strategy_cis(all_strats_results)
 
 #4 Remove a few of the least associated strategies
 few_strategies <- individual_strategies_coefs %>%
-  filter(upper < .2)%>%
+  filter(upper < 0)%>%
   select(name)%>%
   pull()%>%
   paste0(.,collapse=" + ")
 
-drop_bottom_strats <- paste0("changeinrate ~ ",few_strategies,"+",school_covs,"+ (1|state)")%>%
+drop_bottom_strats <- paste0("changeinrate ~ ",few_strategies,"+",school_covs,"+ (1|region/state)")%>%
   as.formula()%>%
   lmer(.,data=df)
-
+summary(drop_bottom_strats)
 # Use the HLMdiag package
-state_diagnostics <- hlm_augment(drop_bottom_strats)%>%
-  arrange(desc(cooksd))
+state_diagnostics <- hlm_augment(drop_bottom_strats)
+plot(state_diagnostics$cooksd)
+
 saveRDS(state_diagnostics,"diagnostics.rds")
 # Generate CIs for final models
 dropped_strats_cis <- drop_bottom_strats %>%
   strategy_cis()
 
 # Look at residuals for bias
-hist(state_diagnostics$.ls.resid,freq=FALSE)
+hist(state_diagnostics$.ls.resid,breaks=100)
 #lines(density(state_diagnostics$.resid))
 qqnorm(scale(state_diagnostics$.ls.resid))
 qqline(scale(state_diagnostics$.ls.resid))
+plot(x=state_diagnostics$changeinrate,y=state_diagnostics$.ls.resid)
+#plot(x=state_diagnostics$derivedtotalenrolled,y=state_diagnostics$.ls.resid)
+
 # 6 Summarise results
-
-
-
+results <- list(lonely_inds = individual_strategies_coefs,
+                full_model  = all_strats_results,
+                reduced_model = dropped_strats_cis)
+saveRDS(results,"model_results.rds")

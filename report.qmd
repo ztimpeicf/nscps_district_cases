@@ -35,13 +35,13 @@ As such, the primary research question is, what is the association between distr
 
 ## Data
 
-This research utilizes school-level COVID-19 case counts and district policy guidance data collected as part of the National School COVID-19 Prevention Study (NSCPS), funded by the Centers for Disease Control and Prevention (CDC). The NSCPS is a nationally representative stratified random sample of 1,602 K-12 public schools across 1,286 districts, drawn to better understand schools' response to the pandemic through the 2021-2022 school year and associated outcomes, including the extent to which prevention strategies were effective in mitigating the spread of COVID-19 among students. As part of the NSCPS, the team scraped and analyzed publicly-posted guidance documents from district websites to identify strategies that were recommended or required of schools. In addition, health departments representing all 50 states and the District of Columbia were contacted and invited to provide any available COVID-19 case count data for the 2021-2022 school year that had been collected from schools comprising the sample.
+This research utilizes school-level COVID-19 case counts and district policy guidance data collected as part of the National School COVID-19 Prevention Study (NSCPS), funded by the Centers for Disease Control and Prevention (CDC). The NSCPS is a nationally representative stratified random sample of 1,602 K-12 public schools across 1,286 districts, drawn to better understand schools' response to the pandemic through the 2021-2022 school year and associated outcomes, including the extent to which prevention strategies were effective in mitigating the spread of COVID-19 among students. As part of the NSCPS, publicly-posted guidance documents from district websites were scraped and analyzed to identify prevention strategies that were recommended or required of schools. In addition, health departments representing all 50 states and the District of Columbia were contacted and invited to provide any available COVID-19 case count data for the 2021-2022 school year that had been collected from schools comprising the sample.
 
 ## Measures
 
-**Outcome of interest**: The difference between schools' spring and fall monthly average case counts, characterized as the average of schools' monthly number of cases per 100 students across January, February, and March 2022 minus the average of October, November, and December 2021 monthly cases per 100 students.
+**Outcome of interest**: The outcome of interest is the difference between schools' spring and fall monthly average case counts, characterized as the average of schools' monthly number of cases per 100 students across January, February, and March 2022 minus the average of October, November, and December 2021 monthly cases per 100 students.
 
-**Independent variables:** The key predictors of interest consist of 10 dichotomous indicators of COVID-19 mitigation strategies aligned as stringently with CDC guidance as possible. Furthermore, a mitigation strategy was considered in place if it was on the district website and had been updated during fall of 2021. These 10 strategy indicators include:
+**Independent variables:** The key predictors of interest consist of 10 dichotomous indicators of COVID-19 mitigation strategies aligned as stringently with CDC guidance as possible[ADD FURTHER DESCRIPTION OF CDC GUIDANCE AND HOW WE ALIGNED WITH IT]. Furthermore, a mitigation strategy was considered in place if it was on the district website and had been updated during fall of 2021. These 10 strategy indicators include:
 
 -   *Vaccination offered*: Offered vaccines at district-sponsored events to teachers and staff and/or students.
 -   *Universal masking requirement*: Teachers, staff, and students required to wear masks consistently and correctly (i.e., covering the mouth and nose) at school.
@@ -49,7 +49,7 @@ This research utilizes school-level COVID-19 case counts and district policy gui
 -   *Screening testing for students*: Encouraged/recommended/offered screening testing of students on a regular basis.
 -   *Staying home when sick*: Encouraged or recommended that students stay home when sick or tested positive for COVID-19.
 -   *Contact tracing*: Encouraged or recommended that schools conduct contact tracing.
--   *Quarantine*: Required students to quarantine if identified to be a close contact.
+-   *Quarantining*: Required students to quarantine if identified to be a close contact.
 -   *Cleaning*: Required schools to clean high touch surfaces at least once a day or between uses.
 -   *HEPA filters*: Encouraged/recommended/offered use of high-efficiency particulate air (HEPA) filters.
 -   *HVAC systems*: Encouraged/recommended/offered replacing, upgrading, maintaining, or inspecting HVAC systems.
@@ -69,15 +69,18 @@ This research utilizes school-level COVID-19 case counts and district policy gui
 
 ## Analyses
 
-In total, policy documents from 1,184 of 1,286 (92%) of the districts were collected. Twenty of the 51 health departments provided case count data for 332 (CONFIRM) of the 1,602 schools (21%). Schools without at least one month of reporting during the spring and fall periods were dropped, with listwise deletion across the explanatory variables. This resulted in a final analytic sample of 332 across 20 states and X districts.
+In total, policy documents from 1,184 of 1,286 (92%) of the districts were collected, with twenty of the 51 health departments reporting on 641 schools (40% of sample). Schools without at least one month of reporting during the spring and fall periods were dropped, resulting in an initial sample of 347 schools (22% of sample) across 338 districts.
 
-All analyses were conducted using R version 4.2.1. Prior to modeling, potential outliers with respect to average cases per 100 students were identified by calculating influence diagnostics, including Cook's Distance and difference in fits (DFFITS) (cite). Of the 332 schools, 17 had high values relative to the average () and were therefore dropped from subsequent analyses. Following removal of outliers, summary statistics were calculated, as well as t-tests for mean differences between groups defined by the presence of the strategy guidance during the fall 2021 semester and Pearson's correlation coefficient between changes in case rates per 100 students and continuous outcomes.
+All analyses were conducted using R version 4.2.1. The analysis begins descriptively, presenting summary statistics for all study variables, as well as t-tests for mean differences between groups defined by the presence of mitigation strategy guidance updated the fall 2021 semester, and Pearson's correlation coefficient between changes in case rates per 100 students and continuous covariates. All continuous covariates were standardized.
 
-The final modeling sequence consisted of two stages, first developing Random Forest algorithms for identifying the most predictive covariates and strategies in the event that sample size required estimation of fewer parameters; and secondly estimating a series of multilevel regression models beginning with a set of models where covariates and one strategy is included, and finally a full model including all relevant covariates and individual strategies of interest. Random Forest algorithms are useful for ranking variables based on their predictive association with the outcome of interest. Due to limited sample size, it was important to a priori exclude the least relevant predictors. As such, we developed two machine learning models to rank covariates and strategies (separately) on their importance in predicting changes in case rates. The machine learning models were developed using *cforest* and then variables were ranked using *varimp*, both functions coming from the *party* package. For each set of predictors, the models were estimated 100 times, with the overall ranking computed as the percentage of iterations where a predictor ranked among the top five in importance. Multilevel modeling will account for the potential nesting of schools within districts, states, and region.
+Following the descriptive analysis, the modeling sequence consists of two stages, first developing Random Forest (RF) algorithms for identifying the most predictive covariates and strategies, and secondly a series of three-level multilevel models to account for schools nested within states, nested within region. First, Random Forest algorithms can be used to rank variables based on their predictive association with the outcome of interest, and due to limited sample size for the current study, it was important to a priori exclude covariates with no predictive value. Ranking covariates consisted of 100 iterations of the RF and selecting covariates having a positive
+variable importance for at least 40% of the iterations.
+
+The second stage of analysis is comprised of two sets of models, including individual multilevel models with one strategy and important covariates as predictors (nested within state and region), followed by a multilevel model with all strategies and important covariates.
 
 # Results
 
-Table 1 provides summary statistics, including Pearson's correlation coefficient, for the change in case rate and covariates. Three hundred thirty-two schools had available case data for fall and spring, with an average of 1.51 more cases per month during the spring of 2022 than fall 2021. Suprisingly, none of the school-level covariates were significantly associated with changes in cases per 100 students.
+Table 1 provides summary statistics, including Pearson's correlation coefficient, for the outcome variable and covariates. Three hundred forty-seven schools had case data available for fall and spring, with an overall average of 1.30 more cases per month during the spring of 2022 than fall 2021. Surprisingly, none of the school-level covariates were significantly associated with changes in cases per 100 students.
 
 ```{r}
 #| echo: false
@@ -92,14 +95,42 @@ tbl1 %>%
                  )
 ```
 
-Table 2 reviews summary statistics and t-test results of the 10 prevention strategies, all dichotomized with a score of one if the district guidance was updated during the fall 2021 semester and met the criterion identified in the measures section above.
+Table 2 reviews summary statistics and t-test results of the 10 prevention strategies, all dichotomized with a score of one if the district guidance was updated during the fall 2021 semester and met the criterion identified in the measures section above. The mean represents the percentage of schools scoring a one for the policy of interest. *No policy* provides the mean change in cases among schools not having the policy, whereas *Has policy* indicates the mean change in cases among schools having the policy. *Difference in means* provides the mean difference between groups, along with p-values from t-tests, with a signficance threshold of $\alpha = .05$. Overall, policies were associated with decreased change in cases. Significant differences were detected between schools dependent on having a district policy of physical distancing (mean difference = .88 cases; p-value = .02), and HVAC systems (.86; .007), with a marginal difference associated with quarantining (.98; .059). 
 
 ```{r}
 #| echo: false
-tbl4 %>%
+tbl2 %>%
    DT::datatable(rownames = FALSE,colnames=c("n (min, max)"='min_max',"Mean (ST Dev)"="mean_stdev", "Difference in means (p-value)"="t_estimate", 'No policy'='No policy_mean','Has policy'='Has policy_mean'),
                  style="bootstrap4",
                  caption = "Table 4: Summary statistics and t-test results of policies dichotimized by scoring at or above 75th percentile",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl2),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+
+Table three reviews results of the Random Forest machine learning algorithms, corresponding with covariate and strategy importance rankings, respectively. State and region were ranked as an important variable in 100% and 98% of iterations, respectively. The only other covariates to be important at least 40% of the iterations were percent student population being two or more races (46%) and percent student population free lunch qualified (40%).
+
+```{r}
+#| echo: false
+tbl3 %>%
+   DT::datatable(rownames = FALSE,
+                 style="bootstrap4",
+                 caption = "Table 5: Covariate importance results from machine learning models",
+                extensions = 'Buttons', options = list(
+    pageLength=nrow(tbl3),
+    dom = 'tB',
+    buttons = c('excel', 'copy'))
+                 )
+```
+Table four reviews results of the RF models for the strategy predictors. All strategies were an important predictor, though there is a clear dropoff between the top four and bottom six. Specifically, Contact tracing and HVAC system policies were an important predictor 98% of iterations, followed by cleaning (77%), and screening and testing for students (57%). The other six included quarantining (25%), universal masking requirements (16%), physical distancing and vaccination offered (both 14%), HEPA filters (8%), and staying home when sick (3%).
+```{r}
+#| echo: false
+tbl4 %>%
+   DT::datatable(rownames = FALSE,
+                 style="bootstrap4",
+                 caption = "Table 6: Strategy importance results from machine learning models",
                 extensions = 'Buttons', options = list(
     pageLength=nrow(tbl4),
     dom = 'tB',
@@ -107,34 +138,30 @@ tbl4 %>%
                  )
 ```
 
-Tables three and four review results of the Random Forest machine learning algorithms, corresponding with covariate and strategy importance rankings, respectively.
-
+Table five shows results of multilevel models run individually for each strategy with important covariates. None of the strategies were statistical and significantly associated with changes in case rates. 
 ```{r}
 #| echo: false
 tbl5 %>%
    DT::datatable(rownames = FALSE,
                  style="bootstrap4",
-                 caption = "Table 5: Covariate importance results from machine learning models",
+                 caption = "Table 5: MLM Results",
                 extensions = 'Buttons', options = list(
     pageLength=nrow(tbl5),
     dom = 'tB',
     buttons = c('excel', 'copy'))
                  )
 ```
-
+Table six shows multilevel model results from including all strategies as predictors in one model. Overall, the only predictor to be signficantly associated with changes in case rates was percent of students free lunch qualified (-0.328; 95% CI: -.64 - -.003).
 ```{r}
 #| echo: false
 tbl6 %>%
    DT::datatable(rownames = FALSE,
                  style="bootstrap4",
-                 caption = "Table 6: Strategy importance results from machine learning models",
+                 caption = "Table 5: MLM Results",
                 extensions = 'Buttons', options = list(
     pageLength=nrow(tbl6),
     dom = 'tB',
     buttons = c('excel', 'copy'))
                  )
 ```
-
-Table five shows results of individual for strategy predictors. Four of the 10 strategies were a top five predictor at least 40% of the iterations. This includes vaccination (100% of the iterations), testing and/or screening (99%), physical distancing (51%), and cohorting and/or staggering (47%). Cleaning strategies were only important 6% of the iterations, and staying home was never an important predictor.
-
 # Discussion
