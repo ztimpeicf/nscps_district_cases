@@ -21,16 +21,13 @@ library(purrr)
 library(broom)
 library(stringr)
 # remove outlier
-#rmve <- readRDS("outlier_schools.rds")
+rmve <- readRDS("outlier_schools.rds")
 
-full_df <- readRDS("analytic_data.rds")
-#%>%
- 
-# anti_join(rmve)
+full_df <- readRDS("analytic_data.rds")%>%
+  anti_join(rmve)
 
 df <- full_df %>%
   filter(!is.na(changeinrate))
-#,!qid %in% rmve
 predictors <- df %>%
   select(vaccination:hvacsystems,starts_with(c("cnty","percent","rpl"))) %>%
   names()

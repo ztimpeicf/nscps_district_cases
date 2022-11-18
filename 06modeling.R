@@ -79,7 +79,7 @@ strategies <- df %>%
 # five at least 20% of the iterations at the machine learning stage.
 
 school_covariates <- covariate_importance %>%
-  filter(pos_ranked > 30, !name %in% c("region","state"))%>%
+  filter((pos_ranked > 30|name %in% c("rplthemes", "cntycaseschange")), !name %in% c("region","state"))%>%
   select(name)%>%
   pull()
 # Look at school_covariates to decide which covariates to include
@@ -128,12 +128,14 @@ all_strats_results <- strategy_cis(all_strats_results)
 
 #4 Remove a few of the least associated strategies
 few_strategies <- individual_strategies_coefs %>%
-  filter(upper < 0)%>%
+  janitor::clean_names()%>%
+  filter(pr_t < .1)%>%
   select(name)%>%
-  pull()%>%
-  paste0(.,collapse=" + ")
+  pull()
+#%>%
+ # paste0(.,collapse=" + ")
 
-drop_bottom_strats <- paste0("changeinrate ~ ",few_strategies,"+",school_covs,"+ (1|region/state)")%>%
+drop_bottom_strats <- paste0("changeinrate ~ ",paste0(few_strategies,collapse=" + "),"+",school_covs,"+ (1|region/state)")%>%
   as.formula()%>%
   lmer(.,data=df)
 summary(drop_bottom_strats)
@@ -147,15 +149,33 @@ dropped_strats_cis <- drop_bottom_strats %>%
   strategy_cis()
 
 # Look at residuals for bias
-hist(state_diagnostics$.ls.resid,breaks=100)
+#hist(state_diagnostics$.ls.resid,breaks=100)
 #lines(density(state_diagnostics$.resid))
-qqnorm(scale(state_diagnostics$.ls.resid))
-qqline(scale(state_diagnostics$.ls.resid))
-plot(x=state_diagnostics$changeinrate,y=state_diagnostics$.ls.resid)
+#qqnorm(scale(state_diagnostics$.ls.resid))
+#qqline(scale(state_diagnostics$.ls.resid))
+#plot(x=state_diagnostics$changeinrate,y=state_diagnostics$.ls.resid)
 #plot(x=state_diagnostics$derivedtotalenrolled,y=state_diagnostics$.ls.resid)
+
+
+# Final: try sum score of marginally important strategies
+cumulative <- df %>%
+  rowwise()%>%
+  mutate(ss = factor(sum(c_across(all_of(few_strategies)),na.rm=T),
+         levels=seq.int(0,length(few_strategies))),
+         .before=1)
+
+cumulative_strats <- paste0("changeinrate ~ ss","+",school_covs,"+ (1|region/state)")%>%
+  as.formula()%>%
+  lmer(.,data=cumulative)
+summary(cumulative_strats)
+
+cumulative_strats_cis <- cumulative_strats %>%
+  strategy_cis()
 
 # 6 Summarise results
 results <- list(lonely_inds = individual_strategies_coefs,
                 full_model  = all_strats_results,
-                reduced_model = dropped_strats_cis)
+                reduced_model = dropped_strats_cis,
+                cumulative_model = cumulative_strats_cis)
 saveRDS(results,"model_results.rds")
+writexl::write_xlsx(results,path="model_results.xlsx")

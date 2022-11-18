@@ -34,7 +34,11 @@ out_model <- paste0(predictor_names,collapse = " + ")%>%
 state_diagnostics <- hlm_augment(out_model)
 
 outlier_schools <- state_diagnostics %>%
-  filter((cooksd == max(cooksd,na.rm=T)))%>%
+  mutate(changeinrate = changeinrate,
+         sd_rate = sd(changeinrate),
+         flag = ifelse(abs(changeinrate) > sd_rate*3.5,1,0)
+         )%>%
+  filter(flag==1)%>%
   select(id)%>%
   pull()
 
