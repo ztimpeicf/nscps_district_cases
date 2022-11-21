@@ -74,11 +74,21 @@ policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
 #summarise(across(where(is.numeric),~max(.,na.rm=TRUE)))
 
 # School characteristics
-nces <- readRDS("raw_data/nces_2021.rds")%>%
+# There is some missingness from the 2021 NCES, so replace it with previous 
+# value
+nces21 <- readRDS("raw_data/nces_2021.rds")%>%
   select(ncessch,derived_total_enrolled=total_enrolled,everything())%>%
   unique()%>%
   rename_with(.fn=~gsub("_","",.x),starts_with("percent"))%>%
   rename_with(.fn=~gsub("enr","",.x),starts_with("percent"))
+
+nces19 <- readRDS("raw_data/nces_stats.rds")%>%
+  rename_with(.fn=~gsub("_","",.x),starts_with("percent"))%>%
+  rename(percentfreereducedlunch=percentstudentsfreereducedlunch)%>%
+  select(names(nces21))
+nces <- nces21 %>%
+  rows_update(nces19,by="ncessch",unmatched="ignore")
+
 
 # School information from the masterlist
 locale <- readRDS("raw_data/locale.rds")

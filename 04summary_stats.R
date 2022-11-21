@@ -91,6 +91,19 @@ anovas <- map_dfr(categorical_vars, ~
     filter(term == .x)
 )
 
+categorical_counts <- map_df(categorical_vars[1:2], function(x){
+                  x <- sym(x)
+  
+                  df %>%
+                    group_by({{ x }})%>%
+                    summarise(across("changeinrate",list_sum_stats))%>%
+                    rename_with(.fn = ~gsub("changeinrate_","",x=.x),starts_with("changeinrate"))%>%
+                    select(Construct= c(1),n,min,max,mean,stdev)%>%
+                    ungroup()%>%
+                    unique()
+}
+)
+
 # Pearson correlations for the continuous variables
 continuous_vars <-summary_statistics %>%
   select(construct)%>%
@@ -113,7 +126,7 @@ continuous_correlations <- map_dfr(continuous_vars, ~
 
 # write results to excel file
 summary_list <- list(summary_statistics=summary_statistics,dichotomous_stats=dichotomous_stats,
-                     anovas=anovas,continuous_correlations=continuous_correlations)
+                     anovas=anovas,categorical_counts=categorical_counts,continuous_correlations=continuous_correlations)
 
 saveRDS(summary_list,"raw_summary_statistics.rds")
 writexl::write_xlsx(summary_list,path="raw_summary_statistics.xlsx")

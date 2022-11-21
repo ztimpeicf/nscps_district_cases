@@ -79,7 +79,7 @@ strategies <- df %>%
 # five at least 20% of the iterations at the machine learning stage.
 
 school_covariates <- covariate_importance %>%
-  filter((pos_ranked > 30|name %in% c("rplthemes", "cntycaseschange")), !name %in% c("region","state"))%>%
+  filter((positives > 50|name %in% c("rplthemes", "cntycaseschange")), !name %in% c("region","state"))%>%
   select(name)%>%
   pull()
 # Look at school_covariates to decide which covariates to include
