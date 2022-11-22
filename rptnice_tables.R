@@ -69,7 +69,8 @@ readRDS("model_results.rds")%>%
   map(~.x %>% mutate(across(where(is.numeric),~round(.,2)),
                      column = glue::glue("{Estimate} ({lower}, {upper})"))%>%
         left_join(replace,by=c("name"="construct"))%>%
-        select(replace,`Coefficient (95% interval)`=column)%>%
+        janitor::clean_names()%>%
+        select(replace,`Coefficient (95% interval)`=column,'p-value'=pr_t)%>%
         relocate(Strategy = replace,.before=c(1)))%>%
   list2env(envir=.GlobalEnv)
 
