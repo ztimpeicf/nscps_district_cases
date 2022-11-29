@@ -74,6 +74,20 @@ readRDS("model_results.rds")%>%
         relocate(Strategy = replace,.before=c(1)))%>%
   list2env(envir=.GlobalEnv)
 
+# Import cumulative model results
+cumulative_table <- readRDS("cumulative_results.rds") %>%
+  janitor::clean_names()%>%
+  mutate(across(where(is.numeric),~round(.,2)),
+         column = glue::glue("{estimate} ({lower}, {upper})"))%>%
+  select(model,name,column,pr_t)%>%
+  pivot_wider(id_cols = name,names_from = model,values_from = column:pr_t,names_glue="{model}_{.value}")%>%
+  select(name,starts_with(c("0.1","0.2","0.5","0.6","0.7","0.8","1")))%>%
+  left_join(replace,by=c("name"="construct"))%>%
+  rename_with(.fn = ~ gsub("column",'Coefficient (95% CI)',.x),.cols=contains("column"))%>%
+  rename_with(.fn = ~ gsub("pr_t","p-value",.x),.cols=contains("pr_"))%>%
+  relocate('Cumulative number strategies' = replace,.before=c(1))
+
+
 tables <-
   list(
     tbl1 = tbl1,
@@ -83,7 +97,7 @@ tables <-
     tbl5 = lonely_inds,
     tbl6 = full_model,
     tbl7 = reduced_model,
-    tbl8 = cumulative_model
+    tbl8 = cumulative_table
   )
 saveRDS(tables, "output_tables.rds")
 writexl::write_xlsx(tables, path = "output_tables.xlsx")
