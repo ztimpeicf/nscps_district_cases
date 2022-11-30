@@ -75,18 +75,31 @@ readRDS("model_results.rds")%>%
   list2env(envir=.GlobalEnv)
 
 # Import cumulative model results
+model_comps <- readRDS("cumulative_results.rds") %>%
+  janitor::clean_names()%>%
+  mutate(across(where(is.numeric),~as.character(round(.,3))))%>%
+  select(model,aic,bic,pr_chisq)%>%
+  unique()%>%
+  filter(model %in% c("0.1","0.2","0.5"))%>%
+  pivot_longer(cols=-model)%>%
+  pivot_wider(id_cols=name,names_from=model,values_from=value)
+
 cumulative_table <- readRDS("cumulative_results.rds") %>%
   janitor::clean_names()%>%
-  mutate(across(where(is.numeric),~round(.,2)),
-         column = glue::glue("{estimate} ({lower}, {upper})"))%>%
+  filter(model %in% c("0.1","0.2","0.5"), stringr::str_detect(name,"^ss"))%>%
+  mutate(across(where(is.numeric),~as.character(round(.,2))),
+         column = as.character(glue::glue("{estimate} ({lower}, {upper})")))%>%
   select(model,name,column,pr_t)%>%
   pivot_wider(id_cols = name,names_from = model,values_from = column:pr_t,names_glue="{model}_{.value}")%>%
-  select(name,starts_with(c("0.1","0.2","0.5","0.6","0.7","0.8","1")))%>%
+  select(name,starts_with(c("0.1","0.2","0.5")))%>%
   left_join(replace,by=c("name"="construct"))%>%
   rename_with(.fn = ~ gsub("column",'Coefficient (95% CI)',.x),.cols=contains("column"))%>%
   rename_with(.fn = ~ gsub("pr_t","p-value",.x),.cols=contains("pr_"))%>%
   relocate('Cumulative number strategies' = replace,.before=c(1))
+comparison_names <- cumulative_table %>% select(c(1),contains("Coefficient"))%>%names()
+names(model_comps)<-comparison_names
 
+cumulative_table <- bind_rows(cumulative_table,model_comps)
 
 tables <-
   list(
