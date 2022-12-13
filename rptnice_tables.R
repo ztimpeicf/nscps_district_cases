@@ -80,18 +80,19 @@ model_comps <- readRDS("cumulative_results.rds") %>%
   mutate(across(where(is.numeric),~as.character(round(.,3))))%>%
   select(model,aic,bic,pr_chisq)%>%
   unique()%>%
-  filter(model %in% c("0.1","0.2","0.5"))%>%
+  filter(model %in% c("0.1","0.2"))%>%
   pivot_longer(cols=-model)%>%
-  pivot_wider(id_cols=name,names_from=model,values_from=value)
+  pivot_wider(id_cols=name,names_from=model,values_from=value)%>%
+  filter(!name=="pr_chisq")
 
 cumulative_table <- readRDS("cumulative_results.rds") %>%
   janitor::clean_names()%>%
-  filter(model %in% c("0.1","0.2","0.5"), stringr::str_detect(name,"^ss"))%>%
+  filter(model %in% c("0.1","0.2","final"), stringr::str_detect(name,"^ss"))%>%
   mutate(across(where(is.numeric),~as.character(round(.,2))),
          column = as.character(glue::glue("{estimate} ({lower}, {upper})")))%>%
   select(model,name,column,pr_t)%>%
   pivot_wider(id_cols = name,names_from = model,values_from = column:pr_t,names_glue="{model}_{.value}")%>%
-  select(name,starts_with(c("0.1","0.2","0.5")))%>%
+  select(name,starts_with(c("0.1","0.2","final")))%>%
   left_join(replace,by=c("name"="construct"))%>%
   rename_with(.fn = ~ gsub("column",'Coefficient (95% CI)',.x),.cols=contains("column"))%>%
   rename_with(.fn = ~ gsub("pr_t","p-value",.x),.cols=contains("pr_"))%>%

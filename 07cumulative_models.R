@@ -106,7 +106,6 @@ models <- map(cumulative_dfs, ~
                 as.formula()%>%
                 lmer(.,data=.x))
 
-
 fit_comps <- anova(models[[1]],models[[2]],models[[3]]) %>%
   cbind(model=c("0.1","0.2","0.5"))
 
@@ -117,5 +116,21 @@ cumulative_summaries <- map(models, ~
   set_names(nm=cutoffs)%>%
   bind_rows(.id="model")%>%
   left_join(fit_comps)
+
+test_dfs <- df %>%
+  rowwise()%>%
+  mutate(ss = sum(c_across(all_of(cutoff_strats[[1]])),na.rm=T),
+         ss3 = ifelse(ss==3,1,0),
+         ss5 = ifelse(sum(c_across(all_of(cutoff_strats[[2]])),na.rm=T)==5,1,0),
+         ss3 = ifelse(ss5==1,0,ss3),
+         .before=1) 
+model1 <- paste0("changeinrate ~ ss3 +ss5","+",school_covs,"+ (1|region/state)")%>%
+  as.formula()%>%
+  lmer(.,data=test_dfs)
+summary(model1)
+
+final <- strategy_cis(model1)%>%
+  mutate(model="final")
+cumulative_summaries <- bind_rows(cumulative_summaries,final) 
 saveRDS(cumulative_summaries,"cumulative_results.rds")
 writexl::write_xlsx(cumulative_summaries,path="cumulative_results.xlsx")
