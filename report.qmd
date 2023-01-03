@@ -32,11 +32,11 @@ Schools are a critical environment for children, youth, families, and communitie
 
 # Introduction
 
-Safe schools are essential to the healthy development of children and youth, a foundational context providing services beyond education, including food and nutritional support, after-school programming, and multidisciplinary health care services extending to families and communities [@verlenden2021]. Due to the school environment's indelible position in the social context, strategies intended to address public health emergencies must be tailored to minimize disruption of services while also effectively addressing potential emergency events. The onset of the COVID-19 pandemic led to school closures and an abrupt shift to virtual educational models, eliminating many of the benefits to in-person attendance [@zimmerman2022]. Moreover, school-based closures disproportionately affected children of low-income families and widened disparities in achievement by socioeconomic status as well as digital access among Black and Latinx communities [@kuhfeld2020][@nicola2020][@oster2021]. In addition, families of children with underlying health conditions, physical or developmental disabilities, or neurodivergent learning differences struggled to get the necessary support and accommodations [@Cernich2022]. Among other costs, parents and caregivers suffered from emotional distress and worried about job security and teachers contemplated retirement in mass [@verlenden2021][@zimmerman2022][@gillani2022][@lambert2020].
+Safe schools are essential to the healthy development of children and youth, a foundational context providing services beyond education, including food and nutritional support, after-school programming, and multidisciplinary health care services extending to families and communities [@verlenden2021]. Due to the school environment's indelible position in the social context, strategies intended to address public health emergencies must be tailored to minimize disruption of services while also effectively addressing potential emergency events. The onset of the COVID-19 pandemic led to school closures and an abrupt shift to virtual educational models, eliminating many of the benefits to in-person attendance [@zimmerman2022]. Moreover, school-based closures disproportionately affected children of low-income families and widened disparities in achievement by socioeconomic status as well as digital access among Black and Latinx communities [@kuhfeld2020; @nicola2020; @oster2021]. In addition, families of children with underlying health conditions, physical or developmental disabilities, or neurodivergent learning differences struggled to get the necessary support and accommodations [@Cernich2022]. Among other costs, parents and caregivers suffered from emotional distress and worried about job security and teachers contemplated retirement in mass [@gillani2022; @lambert2020; @verlenden2021; @zimmerman2022].
 
 The Centers for Disease Control and Prevention (CDC) published operational guidance for in-person learning [@honein2021]. While these recommendations were modified as researchers better understood effective methods to mitigating COVID-19 in communities and schools, overall a layered approach to prevention has endured to include multiple recommendations, such as recommending and/or requiring any of universal masking, physical distancing, students staying home when sick, quarantining for those exposed to COVID-19, contact tracing, improving cleaning practices, screening and testing for students, and improving air quality via filtration methods, such as HEPA filters and HVAC systems [@honein2021]. Emerging research suggests the effectiveness of these individual and layered approaches to mitigating the spread of COVID-19 in schools, though there is less information regarding school districts' role in implementation.
 
-School districts are an important governing body in determining the curricula schools offer and distribution of federal funding across schools. School districts also play a role in implementation of health-promoting policies (e.g.[@Li2022]), and during the pandemic many published their COVID-19 mitigation strategies for the public to follow [@honein2021]. However, to our knowledge there has not been any research evaluating whether these guidance materials are followed by schools to the extent that COVID-19 spread is mitigated. Therefore, the purpose of this study was to assess the following research question: what is the association between districts' COVID-19 prevention policies and subsequent COVID-19 case counts in schools? School districts are an important determinant of school practices, and as such may be an important facilitator of federal guidance. Understanding the extent to which district guidance may influence cases could help improve public health emergency preparedness and response capabilities.
+School districts are an important governing body in determining the curricula schools offer and distribution of federal funding across schools. School districts also play a role in implementation of health-promoting policies [e.g. @Li2022], and during the pandemic many published their COVID-19 mitigation strategies for the public to follow [@honein2021]. However, to our knowledge there has not been any research evaluating whether these guidance materials are followed by schools to the extent that COVID-19 spread is mitigated. Therefore, the purpose of this study was to assess the following research question: what is the association between districts' COVID-19 prevention policies and subsequent COVID-19 case counts in schools? School districts are an important determinant of school practices, and as such may be an important facilitator of federal guidance. Understanding the extent to which district guidance may influence cases could help improve public health emergency preparedness and response capabilities.
 
 # Methods
 
@@ -48,7 +48,9 @@ This research utilizes district policy guidance and school-level COVID-19 case c
 
 ## Measures
 
-**Outcome of interest**: The outcome of interest was the difference between schools' spring and fall monthly average COVID-19 case counts, characterized as the average of schools' monthly number of cases per 100 students across January, February, and March 2022 minus the average of October, November, and December 2021 monthly cases per 100 students. This outcome is hereafter referred to as 'change in case rate.' For this analytic approach, the key predictors of interest consisted of 10 dichotomous indicators of districts' COVID-19 prevention strategy guidance for schools that were aligned to represent adherence to CDC's operational guidance for K-12 schools published prior to July 9, 2021 \[@guidance\]. To score prevention policy guidance, human raters met to standardize how to categorize and rate strategy implementation requirements using a 41-item scoring rubric assessing the extent to which school district guidance documents required or recommended implementation of the 10 key COVID-19 prevention strategies. Once the raters agreed on the requirements and scoring criteria, they reviewed the policies and recorded their ratings. Criteria for scoring were also used to train a machine learning algorithm that was used to assess and score guidance documents. Prevention strategies were considered "in place" if included in guidance documents. Operational definitions of prevention strategy indicators, as well as covariates, are presented in Table 1. A full description of methods used in the policy assessment can be found in Chapter 2. Methodology Mitigation Outcome Study District Policy Assessment, Appendix A. District Policy Scoring Information and Appendix A1. Background on Automated Document Processing Pipeline Architecture.
+**Outcome of interest**: The outcome of interest was the difference between schools' spring and fall monthly average COVID-19 case counts, characterized as the average of schools' monthly number of cases per 100 students across January, February, and March 2022 minus the average of October, November, and December 2021 monthly cases per 100 students. This outcome is hereafter referred to as 'change in case rate.' For this analytic approach, the key predictors of interest consisted of 10 dichotomous indicators of districts' COVID-19 prevention strategy guidance for schools that were aligned to represent adherence to CDC's operational guidance for K-12 schools published prior to July 9, 2021 [@guidance]. To score prevention policy guidance, human raters met to standardize how to categorize and rate strategy implementation requirements using a 41-item scoring rubric assessing the extent to which school district guidance documents required or recommended implementation of the 10 key COVID-19 prevention strategies. Once the raters agreed on the requirements and scoring criteria, they reviewed the policies and recorded their ratings. Criteria for scoring were also used to train a machine learning algorithm that was used to assess and score guidance documents. Prevention strategies were considered "in place" if included in guidance documents. Operational definitions of prevention strategy indicators, as well as covariates, are presented in Table 1.[^2]
+
+[^2]: A full description of methods used in the policy assessment can be found in Chapter 2. Methodology Mitigation Outcome Study District Policy Assessment, Appendix A. District Policy Scoring Information and Appendix A1. Background on Automated Document Processing Pipeline Architecture.
 
 ```{r}
 #| echo: false
@@ -58,7 +60,8 @@ flextable(measures_table)%>%
   theme_apa()%>%
   set_caption(caption = "Table 1: Study measures")%>%
   line_spacing(space=1)%>%
-  fontsize(size=10)
+  fontsize(size=10)%>%
+  align(align="left",part = "body")
 ```
 
 ## Analyses
@@ -82,7 +85,8 @@ qflextable(tbl1)%>%
   theme_apa()%>%
   set_caption(caption = "Table 2: Summary statistics of changes in case rates and standardized covariates")%>%
   line_spacing(space=.5)%>%
-  fontsize(size=10)
+  fontsize(size=10)%>%
+  align(align="left",part = "body")
 ```
 
 {{< pagebreak >}}
@@ -96,7 +100,8 @@ flextable(tbl2) %>%
   theme_apa()%>%
   set_caption(caption = "Table 2: Summary statistics and t-test results of COVID-19 mitigation strategies")%>%
   line_spacing(space=1)%>%
-  fontsize(size=10)
+  fontsize(size=10)%>%
+  align(align="left",part = "body")
 ```
 
 ```{r}
@@ -141,7 +146,8 @@ qflextable(tbl5) %>%
   fontsize(size=10)%>%
   footnote(i=c(3,4,5,7,10),j=1,value=as_paragraph(c("included in 3-strategy index","included in 5-strategy index","","","")),
     ref_symbols = c("a","b","a","b","a"),
-    inline=T,sep=";",part='body')
+    inline=T,sep=";",part='body')%>%
+  align(align="left",part = "body")
 ```
 
 Table four shows multilevel model results from including all strategies as predictors in one model. Overall, none of the strategies were significantly associated with changes in case rates. However, percent of student body two or more races was associated with increased changes in case rates (0.24; 95% CI = 0.04 - 0.46).
@@ -149,9 +155,12 @@ Table four shows multilevel model results from including all strategies as predi
 ```{r}
 #| echo: false
 qflextable(tbl6) %>%
+  theme_apa()%>%
         set_caption(caption = "Table 4: Results of multilevel model including all strategies")%>%
+  line_spacing(space=.5)%>%
   fontsize(size=10,part="body")%>%
-  font(fontname = "Times New Roman",part="header")
+  font(fontname = "Times New Roman",part="header")%>%
+  align(align="left",part = "all")
 ```
 
 Results from the multilevel models with the cumulative indices as the predictors of interest are depicted in table X. The first set of results correspond with the cumulative index calculated using strategies having a marginal association with case rates (p-value \< 0.10; three strategies) and the second with the sum of strategies that had p-values \< 0.20 (five total). Both indices were treated as ranked ordinal, with a minimum of zero (baseline). Finally, a third column of results are presented to further explore differences between the two cumulative indices.
@@ -164,9 +173,12 @@ tbl8 %>%
  #filter(str_detect(name,"ss1|ss2|ss3|ss4|ss5|ss6"))%>%
   select(-name)%>%
   flextable() %>%
+  theme_apa()%>%
   fontsize(size=10,part="body")%>%
-  font(fontname = "Times New Roman",part="header")%>%
-  set_caption(caption = "Table 5: Results of multilevel model with cumulative index of marginally significant strategies")
+  line_spacing(space=1)%>%
+  font(fontname = "Times New Roman",part="all")%>%
+  set_caption(caption = "Table 5: Results of multilevel model with cumulative index of marginally significant strategies")%>%
+  align(align="left",part = "body")
 ```
 
 {{< pagebreak >}}
@@ -189,7 +201,7 @@ Second, from a modeling perspective the relatively high number of recommended st
 
 Third, internet retrieval of publicly available district-level policies for inclusion of COVID-19 prevention guidance can be an imprecise and resource intensive process subject to error. For instance, our scraping of district websites was limited to the timing that policies were updated, as data were scraped during the fall of 2021, and policies may have been updated before and/or thereafter. To address this limitation for the current study, we assessed updates to district guidance and their potential association with cases in spring 2022. Overall, better incorporation of time will potentially lead to more precise results, as well as adoption of technologies and methods more prominent in other fields (e.g., machine learning methods).
 
-{{\<pagebreak\>}}
+{{< pagebreak >}}
 
 ## Appendix
 
@@ -199,9 +211,12 @@ appendix %>%
  #filter(str_detect(name,"ss1|ss2|ss3|ss4|ss5|ss6"))%>%
   select(-name)%>%
   flextable() %>%
+  theme_apa()%>%
   fontsize(size=10,part="body")%>%
-  font(fontname = "Times New Roman",part="header")%>%
-  set_caption(caption = "Results of multilevel models with cumulative indices of thresholds 0.5, .06, 0.7, 0.8, and 1")
+  line_spacing(space=.5)%>%
+  font(fontname = "Times New Roman",part="all")%>%
+  set_caption(caption = "Results of multilevel models with cumulative indices of thresholds 0.5, .06, 0.7, 0.8, and 1")%>%
+  align(align="left",part = "body")
 ```
 
 {{< pagebreak >}}
