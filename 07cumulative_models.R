@@ -120,11 +120,11 @@ cumulative_summaries <- map(models, ~
 test_dfs <- df %>%
   rowwise()%>%
   mutate(ss = sum(c_across(all_of(cutoff_strats[[1]])),na.rm=T),
-         ss3 = ifelse(ss==3,1,0),
+         ss4 = ifelse(ss==4,1,0),
          ss5 = ifelse(sum(c_across(all_of(cutoff_strats[[2]])),na.rm=T)==5,1,0),
-         ss3 = ifelse(ss5==1,0,ss3),
+         ss4 = ifelse(ss5==1,0,ss4),
          .before=1) 
-model1 <- paste0("changeinrate ~ ss3 +ss5","+",school_covs,"+ (1|region/state)")%>%
+model1 <- paste0("changeinrate ~ ss4 +ss5","+",school_covs,"+ (1|region/state)")%>%
   as.formula()%>%
   lmer(.,data=test_dfs)
 summary(model1)

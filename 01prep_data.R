@@ -49,16 +49,25 @@ policy_items <- policy_info %>%
   select(c(1:2))%>%
   tibble::deframe()
 
-policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
-  select(qid=MDR,school_level=`School Level`,district=District,Month,Quarter,26:last_col(),-ends_with("SS"))%>%
-  pivot_longer(cols=6:46)%>%
-  mutate(name = str_replace_all(name,"[:punct:]",""),
+policy <- readxl::read_xlsx("raw_data/2021-2022 School District COVID-19 Policy and Guidance Catalog.xlsx",
+                            sheet = 'Document Catalog',col_names=TRUE,skip = 1)%>%
+  select(qid='MDR Number',school_level=`School Level`,district='District Name','Time Period Published',
+         any_of(policy_info$Item))%>%
+  mutate(qid = ifelse(str_count(qid)==11,paste0('0',qid),qid),
+    quarter_enacted = case_when(tolower(`Time Period Published`) %in% tolower(c('July','August','September','October','November','December','First Quarter','Second Quarter'))~1,
+                                `Time Period Published` %in% c('Missing','-1') ~ NA_real_,
+                                TRUE ~ 0),
+    .before = 1
+  )%>%
+  select(-`Time Period Published`)%>%
+  pivot_longer(5:last_col())%>%
+  mutate(name = str_remove_all(name,"[:punct:]"),
          construct = stringr::str_replace_all(name,policy_items))%>%
   filter(name %in% names(policy_items))%>%
-  left_join(policy_selections, by=c("name"="Item","construct"="Construct"))%>%
+  inner_join(policy_selections, by=c("name"="Item","construct"="Construct"))%>%
   mutate(achieved = ifelse(value==score_needed,1,0))%>%
-  select(-c(name,value,cdc,score_needed))%>%
-  group_by(across(qid:Quarter),construct)%>%
+  select(-c(name,value,cdc,score_needed)) %>%
+  group_by(across(quarter_enacted:construct))%>%
   mutate(total = case_when((operation == "either" & sum(achieved)>0)|
                              (operation=="all" & sum(achieved)==n())~1,
                            TRUE ~ 0)
@@ -66,9 +75,8 @@ policy <- readxl::read_xlsx("raw_data/district_policy_assessments.xlsx")%>%
   select(-operation,-achieved)%>%
   ungroup()%>%
   unique()%>%
-  pivot_wider(id_cols=qid:Quarter,names_from=construct,values_from=total)%>%
-  mutate(Quarter = str_extract(Quarter,"^[:alpha:]+"))%>%
-  rename(policy_month=Month,quarter_enacted=Quarter)
+  pivot_wider(id_cols=quarter_enacted:district,names_from=construct,values_from=total)
+
 
 #policy %>%
 #summarise(across(where(is.numeric),~max(.,na.rm=TRUE)))
@@ -93,12 +101,11 @@ nces <- nces21 %>%
 # School information from the masterlist
 locale <- readRDS("raw_data/locale.rds")
 ml <- readRDS("raw_data/sampling_masterlist.rds")%>%
-  select(ncessch,qid,school_level,enrollment,state,fips,region,locale)%>%
+  select(ncessch,qid,school_level,enrollment,district_name,state,fips,region,locale)%>%
   left_join(nces,by="ncessch",na_matches="never")%>%
   mutate(derived_total_enrolled = ifelse(is.na(derived_total_enrolled),enrollment,derived_total_enrolled),
          locale = na_if(locale, "Missing")) %>% # locale variable
-           rows_patch(locale, by = "ncessch", unmatched = "ignore") 
-  
+           rows_patch(locale, by = "ncessch", unmatched = "ignore")
 table(ml$locale,useNA="always")
 # SVI information
 svi <- readRDS("raw_data/svi.rds")%>%

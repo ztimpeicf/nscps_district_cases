@@ -15,7 +15,7 @@ strategies <- c("vaccination","masks","physicaldistancing",
 # for each strategy indicating if strategy scores in 75th percentile or greater
 final <- analytic %>%
   filter(month %in% c("October","January"))%>%
-  select(-c(hd,student,date,policymonth))%>%
+  select(-c(hd,student,date))%>%
   group_by(qid,schoollevel)%>%
   mutate(caserate = rollingmean/derivedtotalenrolled*100)%>%
   select(qid,schoollevel,district,month,quarterenacted,enrollment,caserate,everything(),-rollingmean)%>%
@@ -24,7 +24,7 @@ final <- analytic %>%
   ungroup()%>%
   mutate(rplthemes = rplthemes*100,
          changeinrate = January - October,
-         across(all_of(strategies),~case_when(quarterenacted %in% c("First","Second")~.,
+         across(all_of(strategies),~case_when(quarterenacted ==0~.,
                                               TRUE ~ 0))
   )%>%
   relocate(derivedtotalenrolled,changeinrate,.before=vaccination)
